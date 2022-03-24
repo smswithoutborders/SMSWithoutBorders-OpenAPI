@@ -1,0 +1,4 @@
+wheel==0.37.1
+Flask==2.0.3
+flask-swagger-ui==3.36.0
+requests==2.27.1

@@ -1,1 +1,1 @@
-# -SMSWithoutBorders-OpenAPI
+# SMSWithoutBorders-OpenAPI

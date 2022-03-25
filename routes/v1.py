@@ -3,6 +3,7 @@ import logging
 from flask import Blueprint, jsonify, request
 from error import BadRequest, InternalServerError, Unauthorized
 from configparser import ConfigParser
+from RabbitMQ.src.rabbitmq import RabbitMQ
 import requests
 
 LOG = logging.getLogger(__name__)
@@ -53,6 +54,11 @@ def subscribe():
             data = {"auth_id": AUTH_ID, "auth_key": AUTH_KEY}
             response = requests.post(url=DEVELOPER_URL, json=data)
             if response.status_code == 200:
+                r = RabbitMQ(dev_id=AUTH_ID)
+                try:
+                    r.add_user(dev_key=AUTH_KEY)
+                except Exception as error:
+                    raise error
                 return "", 200
             elif response.status_code == 401:
                 LOG.error("INVALID DEVELOPERS AUTH_KEY AND AUTH_ID")

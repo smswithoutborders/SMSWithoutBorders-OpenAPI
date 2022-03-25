@@ -1,7 +1,7 @@
 import logging
 
 from flask import Blueprint, jsonify, request
-from error import BadRequest, InternalServerError, Unauthorized
+from error import BadRequest, Conflict, InternalServerError, Unauthorized
 from configparser import ConfigParser
 from RabbitMQ.src.rabbitmq import RabbitMQ
 import requests
@@ -56,7 +56,10 @@ def subscribe():
             if response.status_code == 200:
                 r = RabbitMQ(dev_id=AUTH_ID)
                 try:
-                    r.add_user(dev_key=AUTH_KEY)
+                    if r.exist():
+                        LOG.error("USER IS SUBSCRIBED ALREADY")
+                    else:
+                        r.add_user(dev_key=AUTH_KEY)
                 except Exception as error:
                     raise error
                 return "", 200
@@ -67,6 +70,8 @@ def subscribe():
         return str(err), 400
     except Unauthorized as err:
         return str(err), 401
+    except Conflict as err:
+        return str(err), 409
     except (InternalServerError) as err:
         LOG.error(err)
         return "internal server error", 500
@@ -119,6 +124,14 @@ def unsubscribe():
             data = {"auth_id": AUTH_ID, "auth_key": AUTH_KEY}
             response = requests.post(url=DEVELOPER_URL, json=data)
             if response.status_code == 200:
+                r = RabbitMQ(dev_id=AUTH_ID)
+                try:
+                    if r.exist():
+                        r.delete()
+                    else:
+                        LOG.error("USER IS NOT SUBSCRIBED")
+                except Exception as error:
+                    raise error
                 return "", 200
             elif response.status_code == 401:
                 LOG.error("INVALID DEVELOPERS AUTH_KEY AND AUTH_ID")

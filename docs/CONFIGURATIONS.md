@@ -87,3 +87,9 @@ cp example.setup.ini setup.ini
 ```bash
 python3 server.py
 ```
+
+## API SandBox
+
+```
+<host>:<PORT>/<VERSION>/api-docs/
+```

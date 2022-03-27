@@ -146,3 +146,55 @@ def unsubscribe():
     except (Exception) as err:
         LOG.error(err)
         return "internal server error", 500
+
+
+@v1.route("/sms", methods=["POST"])
+def sms():
+    try:
+        if not "auth_id" in request.json or not request.json["auth_id"]:
+            LOG.error("no auth_id")
+            raise BadRequest()
+        elif not "text" in request.json or not request.json["text"]:
+            LOG.error("no text")
+            raise BadRequest()
+        elif not "number" in request.json or not request.json["number"]:
+            LOG.error("no number")
+            raise BadRequest()
+        elif not "operator_name" in request.json or not request.json["operator_name"]:
+            LOG.error("no operator_name")
+            raise BadRequest()
+
+        AUTH_ID = request.json["auth_id"]
+        TEXT = request.json["text"]
+        NUMBER = request.json["number"]
+        OPERATOR = request.json["operator_name"]
+
+        data = {
+            "operator_name": OPERATOR,
+            "text": TEXT,
+            "number": NUMBER,
+        }
+
+        r = RabbitMQ(dev_id=AUTH_ID)
+        try:
+            if r.exist():
+                r.request_sms(data=data)
+            else:
+                LOG.error("USER IS NOT SUBSCRIBED")
+                raise Unauthorized()
+        except Exception as error:
+            raise error
+        return "", 200
+
+    except BadRequest as err:
+        return str(err), 400
+    except Unauthorized as err:
+        return str(err), 401
+    except Conflict as err:
+        return str(err), 409
+    except (InternalServerError) as err:
+        LOG.error(err)
+        return "internal server error", 500
+    except (Exception) as err:
+        LOG.error(err)
+        return "internal server error", 500

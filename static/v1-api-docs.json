@@ -14,6 +14,10 @@
         {
             "name": "Unsubscribe",
             "description": "Unsubscribe for OpenAPI access"
+        },
+        {
+            "name": "SMS",
+            "description": "Manage SMS messages"
         }
     ],
     "paths": {
@@ -114,6 +118,80 @@
                                         "type": "string"
                                     },
                                     "key": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request (e.g missing required fields)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized (e.g User, Platform not found)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sms": {
+            "post": {
+                "tags": [
+                    "SMS"
+                ],
+                "summary": "Send an SMS",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "auth_id": {
+                                        "type": "string"
+                                    },
+                                    "operator_name": {
+                                        "type": "string"
+                                    },
+                                    "text": {
+                                        "type": "string"
+                                    },
+                                    "number": {
                                         "type": "string"
                                     }
                                 }

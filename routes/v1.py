@@ -151,39 +151,33 @@ def unsubscribe():
 @v1.route("/sms", methods=["POST"])
 def sms():
     try:
-        if not "auth_id" in request.json or not request.json["auth_id"]:
-            LOG.error("no auth_id")
-            raise BadRequest()
-        elif not "text" in request.json or not request.json["text"]:
-            LOG.error("no text")
-            raise BadRequest()
-        elif not "number" in request.json or not request.json["number"]:
-            LOG.error("no number")
-            raise BadRequest()
-        elif not "operator_name" in request.json or not request.json["operator_name"]:
-            LOG.error("no operator_name")
+        if not isinstance(request.json, list):
+            LOG.error("Body most be a list")
             raise BadRequest()
 
-        AUTH_ID = request.json["auth_id"]
-        TEXT = request.json["text"]
-        NUMBER = request.json["number"]
-        OPERATOR = request.json["operator_name"]
+        payload = request.json
 
-        data = {
-            "operator_name": OPERATOR,
-            "text": TEXT,
-            "number": NUMBER,
-        }
+        for data in payload:
+            AUTH_ID = data["auth_id"]
+            TEXT = data["text"]
+            NUMBER = data["number"]
+            OPERATOR = data["operator_name"]
 
-        r = RabbitMQ(dev_id=AUTH_ID)
-        try:
-            if r.exist():
-                r.request_sms(data=data)
-            else:
-                LOG.error("USER IS NOT SUBSCRIBED")
-                raise Unauthorized()
-        except Exception as error:
-            raise error
+            req_data = {
+                "operator_name": OPERATOR,
+                "text": TEXT,
+                "number": NUMBER,
+            }
+
+            r = RabbitMQ(dev_id=AUTH_ID)
+            try:
+                if r.exist():
+                    r.request_sms(data=req_data)
+                else:
+                    LOG.error("USER IS NOT SUBSCRIBED")
+                    raise Unauthorized()
+            except Exception as error:
+                raise error
         return "", 200
 
     except BadRequest as err:

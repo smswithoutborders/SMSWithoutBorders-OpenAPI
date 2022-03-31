@@ -151,19 +151,25 @@ def unsubscribe():
 @v1.route("/sms", methods=["POST"])
 def sms():
     try:
-        if not isinstance(request.json, list):
-            LOG.error("Body most be a list")
+        if not "auth_id" in request.json or not request.json["auth_id"]:
+            LOG.error("no auth_id")
+            raise BadRequest()
+        elif not "data" in request.json:
+            LOG.error("no data")
+            raise BadRequest()
+        elif not isinstance(request.json["data"], list):
+            LOG.error("Data most be a list")
             raise BadRequest()
 
-        payload = request.json
+        payload = request.json["data"]
+        AUTH_ID = request.json["auth_id"]
 
         for data in payload:
-            AUTH_ID = data["auth_id"]
             TEXT = data["text"]
             NUMBER = data["number"]
             OPERATOR = data["operator_name"]
 
-            req_data = {
+            sms_data = {
                 "operator_name": OPERATOR,
                 "text": TEXT,
                 "number": NUMBER,
@@ -172,7 +178,7 @@ def sms():
             r = RabbitMQ(dev_id=AUTH_ID)
             try:
                 if r.exist():
-                    r.request_sms(data=req_data)
+                    r.request_sms(data=sms_data)
                 else:
                     LOG.error("USER IS NOT SUBSCRIBED")
                     raise Unauthorized()

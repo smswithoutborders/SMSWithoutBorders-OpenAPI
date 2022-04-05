@@ -1,6 +1,5 @@
 import logging
 import requests
-import json
 
 from flask import Blueprint, helpers, jsonify, request
 from error import BadRequest, Conflict, InternalServerError, Unauthorized
@@ -13,7 +12,7 @@ from routes.helpers import (
     get_phonenumber_country,
 )
 
-LOG = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 v1 = Blueprint("v1", __name__)
 
 
@@ -21,16 +20,16 @@ v1 = Blueprint("v1", __name__)
 def subscribe():
     try:
         if not "auth_id" in request.json or not request.json["auth_id"]:
-            LOG.error("no auth_id")
+            logger.error("no auth_id")
             raise BadRequest()
         elif not "auth_key" in request.json or not request.json["auth_key"]:
-            LOG.error("no auth_key")
+            logger.error("no auth_key")
             raise BadRequest()
         elif not "key" in request.json or not request.json["key"]:
-            LOG.error("no key")
+            logger.error("no key")
             raise BadRequest()
         elif not "id" in request.json or not request.json["id"]:
-            LOG.error("no id")
+            logger.error("no id")
             raise BadRequest()
 
         AUTH_ID = request.json["auth_id"]
@@ -55,7 +54,7 @@ def subscribe():
         )
 
         if ID != SETUP_ID and KEY != SETUP_KEY:
-            LOG.error("INVALID SETUP CREDENTIALS")
+            logger.error("INVALID SETUP CREDENTIALS")
             raise Unauthorized()
         else:
             data = {"auth_id": AUTH_ID, "auth_key": AUTH_KEY}
@@ -64,14 +63,14 @@ def subscribe():
                 r = RabbitMQ(dev_id=AUTH_ID)
                 try:
                     if r.exist():
-                        LOG.error("USER IS SUBSCRIBED ALREADY")
+                        logger.error("USER IS SUBSCRIBED ALREADY")
                     else:
                         r.add_user(dev_key=AUTH_KEY)
                 except Exception as error:
                     raise error
                 return "", 200
             elif response.status_code == 401:
-                LOG.error("INVALID DEVELOPERS AUTH_KEY AND AUTH_ID")
+                logger.error("INVALID DEVELOPERS AUTH_KEY AND AUTH_ID")
                 raise Unauthorized()
     except BadRequest as err:
         return str(err), 400
@@ -80,10 +79,10 @@ def subscribe():
     except Conflict as err:
         return str(err), 409
     except (InternalServerError) as err:
-        LOG.error(err)
+        logger.error(err)
         return "internal server error", 500
     except (Exception) as err:
-        LOG.error(err)
+        logger.error(err)
         return "internal server error", 500
 
 
@@ -91,16 +90,16 @@ def subscribe():
 def unsubscribe():
     try:
         if not "auth_id" in request.json or not request.json["auth_id"]:
-            LOG.error("no auth_id")
+            logger.error("no auth_id")
             raise BadRequest()
         elif not "auth_key" in request.json or not request.json["auth_key"]:
-            LOG.error("no auth_key")
+            logger.error("no auth_key")
             raise BadRequest()
         elif not "key" in request.json or not request.json["key"]:
-            LOG.error("no key")
+            logger.error("no key")
             raise BadRequest()
         elif not "id" in request.json or not request.json["id"]:
-            LOG.error("no id")
+            logger.error("no id")
             raise BadRequest()
 
         AUTH_ID = request.json["auth_id"]
@@ -125,7 +124,7 @@ def unsubscribe():
         )
 
         if ID != SETUP_ID and KEY != SETUP_KEY:
-            LOG.error("INVALID SETUP CREDENTIALS")
+            logger.error("INVALID SETUP CREDENTIALS")
             raise Unauthorized()
         else:
             data = {"auth_id": AUTH_ID, "auth_key": AUTH_KEY}
@@ -136,22 +135,22 @@ def unsubscribe():
                     if r.exist():
                         r.delete()
                     else:
-                        LOG.error("USER IS NOT SUBSCRIBED")
+                        logger.error("USER IS NOT SUBSCRIBED")
                 except Exception as error:
                     raise error
                 return "", 200
             elif response.status_code == 401:
-                LOG.error("INVALID DEVELOPERS AUTH_KEY AND AUTH_ID")
+                logger.error("INVALID DEVELOPERS AUTH_KEY AND AUTH_ID")
                 raise Unauthorized()
     except BadRequest as err:
         return str(err), 400
     except Unauthorized as err:
         return str(err), 401
     except (InternalServerError) as err:
-        LOG.error(err)
+        logger.error(err)
         return "internal server error", 500
     except (Exception) as err:
-        LOG.error(err)
+        logger.error(err)
         return "internal server error", 500
 
 
@@ -159,13 +158,13 @@ def unsubscribe():
 def sms():
     try:
         if not "auth_id" in request.json or not request.json["auth_id"]:
-            LOG.error("no auth_id")
+            logger.error("no auth_id")
             raise BadRequest()
         elif not "data" in request.json:
-            LOG.error("no data")
+            logger.error("no data")
             raise BadRequest()
         elif not isinstance(request.json["data"], list):
-            LOG.error("Data most be a list")
+            logger.error("Data most be a list")
             raise BadRequest()
 
         payload = request.json["data"]
@@ -187,7 +186,7 @@ def sms():
                 if r.exist():
                     r.request_sms(data=sms_data)
                 else:
-                    LOG.error("USER IS NOT SUBSCRIBED")
+                    logger.error("USER IS NOT SUBSCRIBED")
                     raise Unauthorized()
             except Exception as error:
                 raise error
@@ -200,10 +199,10 @@ def sms():
     except Conflict as err:
         return str(err), 409
     except (InternalServerError) as err:
-        LOG.error(err)
+        logger.error(err)
         return "internal server error", 500
     except (Exception) as err:
-        LOG.error(err)
+        logger.error(err)
         return "internal server error", 500
 
 
@@ -211,7 +210,7 @@ def sms():
 def sms_operator():
     try:
         if not isinstance(request.json, list):
-            LOG.error("Request body most be a list")
+            logger.error("Request body most be a list")
             raise BadRequest()
 
         payload = request.json
@@ -236,13 +235,13 @@ def sms_operator():
                 else:
                     result.append(payload_data)
             except InvalidPhoneNUmber as error:
-                LOG.error(f"INVALID PHONE NUMBER: {NUMBER}")
+                logger.error(f"INVALID PHONE NUMBER: {NUMBER}")
                 result.append(payload_data)
             except InvalidCountryCode as error:
-                LOG.error(f"INVALID COUNTRY CODE: {NUMBER}")
+                logger.error(f"INVALID COUNTRY CODE: {NUMBER}")
                 result.append(payload_data)
             except MissingCountryCode as error:
-                LOG.error(f"MISSING COUNTRY CODE: {NUMBER}")
+                logger.error(f"MISSING COUNTRY CODE: {NUMBER}")
                 result.append(payload_data)
 
         return jsonify(result), 200
@@ -252,8 +251,8 @@ def sms_operator():
     except Unauthorized as err:
         return str(err), 401
     except InternalServerError as err:
-        LOG.error(err)
+        logger.error(err)
         return "internal server error", 500
     except Exception as err:
-        LOG.error(err)
+        logger.error(err)
         return "internal server error", 500

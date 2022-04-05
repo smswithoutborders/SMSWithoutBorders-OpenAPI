@@ -1,10 +1,17 @@
 import logging
+import requests
+import json
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, helpers, jsonify, request
 from error import BadRequest, Conflict, InternalServerError, Unauthorized
 from configparser import ConfigParser
 from RabbitMQ.src.rabbitmq import RabbitMQ
-import requests
+from routes.helpers import (
+    InvalidCountryCode,
+    InvalidPhoneNUmber,
+    MissingCountryCode,
+    get_phonenumber_country,
+)
 
 LOG = logging.getLogger(__name__)
 v1 = Blueprint("v1", __name__)
@@ -196,5 +203,60 @@ def sms():
         LOG.error(err)
         return "internal server error", 500
     except (Exception) as err:
+        LOG.error(err)
+        return "internal server error", 500
+
+
+@v1.route("/sms/operator", methods=["POST"])
+def sms_operator():
+    try:
+        if not "data" in request.json:
+            LOG.error("no data")
+            raise BadRequest()
+        elif not isinstance(request.json["data"], list):
+            LOG.error("Data most be a list")
+            raise BadRequest()
+
+        payload = request.json["data"]
+        result = []
+
+        for data in payload:
+            TEXT = data["text"]
+            NUMBER = data["number"]
+
+            if not "operator_name" in data or not data["operator_name"]:
+                OPERATOR = ""
+            else:
+                OPERATOR = data["operator_name"]
+
+            payload_data = {"number": NUMBER, "text": TEXT, "operator_name": OPERATOR}
+
+            try:
+                if not OPERATOR:
+                    operator = get_phonenumber_country(NUMBER)
+                    payload_data["operator_name"] = operator
+                    result.append(payload_data)
+                else:
+                    result.append(payload_data)
+            except InvalidPhoneNUmber as error:
+                LOG.error(f"INVALID PHONE NUMBER: {NUMBER}")
+                result.append(payload_data)
+            except InvalidCountryCode as error:
+                LOG.error(f"INVALID COUNTRY CODE: {NUMBER}")
+                result.append(payload_data)
+            except MissingCountryCode as error:
+                LOG.error(f"MISSING COUNTRY CODE: {NUMBER}")
+                result.append(payload_data)
+
+        return jsonify(result), 200
+
+    except BadRequest as err:
+        return str(err), 400
+    except Unauthorized as err:
+        return str(err), 401
+    except InternalServerError as err:
+        LOG.error(err)
+        return "internal server error", 500
+    except Exception as err:
         LOG.error(err)
         return "internal server error", 500

@@ -210,14 +210,11 @@ def sms():
 @v1.route("/sms/operator", methods=["POST"])
 def sms_operator():
     try:
-        if not "data" in request.json:
-            LOG.error("no data")
-            raise BadRequest()
-        elif not isinstance(request.json["data"], list):
-            LOG.error("Data most be a list")
+        if not isinstance(request.json, list):
+            LOG.error("Request body most be a list")
             raise BadRequest()
 
-        payload = request.json["data"]
+        payload = request.json
         result = []
 
         for data in payload:

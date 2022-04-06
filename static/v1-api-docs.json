@@ -251,7 +251,7 @@
                 }
             }
         },
-        "/sms/operator": {
+        "/sms/operators": {
             "post": {
                 "tags": [
                     "SMS"

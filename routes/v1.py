@@ -206,7 +206,7 @@ def sms():
         return "internal server error", 500
 
 
-@v1.route("/sms/operator", methods=["POST"])
+@v1.route("/sms/operators", methods=["POST"])
 def sms_operator():
     try:
         if not isinstance(request.json, list):

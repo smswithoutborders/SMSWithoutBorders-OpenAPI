@@ -37,5 +37,5 @@ if __name__ == "__main__":
         server_logger.info(f"Running on secure port: {SSL['PORT']}")
         app.run(host=api["HOST"], port=SSL["PORT"], ssl_context=context)
     else:
-        server_logger.info(f"Running on unsecure port: {api['PORT']}")
+        server_logger.info(f"Running on un-secure port: {api['PORT']}")
         app.run(host=api["HOST"], port=api["PORT"])

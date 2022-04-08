@@ -2,7 +2,18 @@ import logging
 import ssl
 
 from flask import Flask
-from configparser import ConfigParser
+from flask_cors import CORS
+
+app = Flask(__name__)
+
+from config_init import configuration
+
+config = configuration()
+api = config["API"]
+SSL = config["SSL_API"]
+
+CORS(app)
+
 from routes.v1 import v1
 from flask_swagger_ui import get_swaggerui_blueprint
 from logger import logger
@@ -10,14 +21,6 @@ from models.isSSL import isSSL
 
 logger()
 server_logger = logging.getLogger(__name__)
-
-config = ConfigParser()
-config.read("config/default.ini")
-
-api = config["API"]
-SSL = config["SSL_API"]
-
-app = Flask(__name__)
 
 swaggerui_blueprint = get_swaggerui_blueprint(
     "/v1/api-docs", "/static/v1-api-docs.json"

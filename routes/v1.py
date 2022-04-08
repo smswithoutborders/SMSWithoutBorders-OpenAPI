@@ -3,7 +3,10 @@ import requests
 
 from flask import Blueprint, helpers, jsonify, request
 from error import BadRequest, Conflict, InternalServerError, Unauthorized
-from configparser import ConfigParser
+from config_init import configuration
+
+config = configuration()
+
 from RabbitMQ.src.rabbitmq import RabbitMQ
 from routes.helpers import (
     InvalidCountryCode,
@@ -37,15 +40,11 @@ def subscribe():
         ID = request.json["id"]
         KEY = request.json["key"]
 
-        setup = ConfigParser()
-        setup.read("setup.ini")
-        SETUP = setup["CREDENTIALS"]
+        SETUP = config["SETUP_CREDS"]
         SETUP_ID = SETUP["ID"]
         SETUP_KEY = SETUP["key"]
 
-        developer = ConfigParser()
-        developer.read("config/default.ini")
-        DEVELOPER = developer["DEVELOPER"]
+        DEVELOPER = config["DEVELOPER"]
         DEVELOPER_HOST = DEVELOPER["HOST"]
         DEVELOPER_PORT = DEVELOPER["PORT"]
         DEVELOPER_VERSION = DEVELOPER["VERSION"]
@@ -107,15 +106,11 @@ def unsubscribe():
         ID = request.json["id"]
         KEY = request.json["key"]
 
-        setup = ConfigParser()
-        setup.read("setup.ini")
-        SETUP = setup["CREDENTIALS"]
+        SETUP = config["SETUP_CREDS"]
         SETUP_ID = SETUP["ID"]
         SETUP_KEY = SETUP["key"]
 
-        developer = ConfigParser()
-        developer.read("config/default.ini")
-        DEVELOPER = developer["DEVELOPER"]
+        DEVELOPER = config["DEVELOPER"]
         DEVELOPER_HOST = DEVELOPER["HOST"]
         DEVELOPER_PORT = DEVELOPER["PORT"]
         DEVELOPER_VERSION = DEVELOPER["VERSION"]

@@ -67,7 +67,7 @@ All configuration files are found in the **[config](../config)** directory.
 To set up the API, copy the template files "example.default.ini" and rename to "default.ini"
 
 ```
-cp example.default.ini default.ini
+cp config/example.default.ini config/default.ini
 ```
 
 ### Access configurations

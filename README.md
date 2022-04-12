@@ -5,7 +5,7 @@
 ## Documentation
 
 1. [Configurations](docs/CONFIGURATIONS.md)
-2. [Features](docs/API_VERSIONS.md)
+2. [API Endpoints](docs/API_VERSIONS.md)
 
 ## Contribution
 

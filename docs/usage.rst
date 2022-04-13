@@ -65,3 +65,25 @@ Example using `curl <https://curl.se/>`_
     }'
 
 See :ref:`Reference Documentation` for more API references
+
+Manage OpenAPI messages
+=======================
+
+Manage your OpenApi messages through the `SMSWithoutBorders RabbitMQ dashboard <https://developers.smswithoutborders.com:15671>`_. 
+
+1. Login
+********
+
+Visit `SMSWithoutBorders RabbitMQ dashboard <https://developers.smswithoutborders.com:15671>`_.
+
+.. image:: https://raw.githubusercontent.com/smswithoutborders/SMSWithoutBorders-Resources/master/multimedia/img/rabbitmq_login.png
+    :width: 350
+    :align: center
+    :alt: rabbitmq_login
+
+- Username = Your developer's auth_id
+- Password = Your developer's auth_key
+
+.. note:: 
+
+    If you do not have the developer's token (Auth_key and Auth_id), head over to `SMS Without Borders developer console <https://developers.smswithoutborders.com>`_ and create one.

@@ -1,7 +1,7 @@
 import logging
 import requests
 
-from flask import Blueprint, helpers, jsonify, request
+from flask import Blueprint, jsonify, request
 from error import BadRequest, Conflict, InternalServerError, Unauthorized
 from config_init import configuration
 
@@ -35,36 +35,36 @@ def subscribe():
             logger.error("no id")
             raise BadRequest()
 
-        AUTH_ID = request.json["auth_id"]
-        AUTH_KEY = request.json["auth_key"]
-        ID = request.json["id"]
-        KEY = request.json["key"]
+        authId = request.json["auth_id"]
+        authKey = request.json["auth_key"]
+        devSetupId = request.json["id"]
+        devSetupKey = request.json["key"]
 
         SETUP = config["SETUP_CREDS"]
-        SETUP_ID = SETUP["ID"]
-        SETUP_KEY = SETUP["key"]
+        setupId = SETUP["ID"]
+        setupKey = SETUP["key"]
 
         DEVELOPER = config["DEVELOPER"]
-        DEVELOPER_HOST = DEVELOPER["HOST"]
-        DEVELOPER_PORT = DEVELOPER["PORT"]
-        DEVELOPER_VERSION = DEVELOPER["VERSION"]
-        DEVELOPER_URL = (
-            f"{DEVELOPER_HOST}:{DEVELOPER_PORT}/{DEVELOPER_VERSION}/authenticate"
+        developerHost = DEVELOPER["HOST"]
+        developerPort = DEVELOPER["PORT"]
+        developerVersion = DEVELOPER["VERSION"]
+        developerUrl = (
+            f"{developerHost}:{developerPort}/{developerVersion}/authenticate"
         )
 
-        if ID != SETUP_ID and KEY != SETUP_KEY:
+        if devSetupId != setupId and devSetupKey != setupKey:
             logger.error("INVALID SETUP CREDENTIALS")
             raise Unauthorized()
         else:
-            data = {"auth_id": AUTH_ID, "auth_key": AUTH_KEY}
-            response = requests.post(url=DEVELOPER_URL, json=data)
+            data = {"auth_id": authId, "auth_key": authKey}
+            response = requests.post(url=developerUrl, json=data)
             if response.status_code == 200:
-                r = RabbitMQ(dev_id=AUTH_ID)
+                r = RabbitMQ(dev_id=authId)
                 try:
                     if r.exist():
                         logger.error("USER IS SUBSCRIBED ALREADY")
                     else:
-                        r.add_user(dev_key=AUTH_KEY)
+                        r.add_user(dev_key=authKey)
                 except Exception as error:
                     raise error
                 return "", 200
@@ -101,31 +101,31 @@ def unsubscribe():
             logger.error("no id")
             raise BadRequest()
 
-        AUTH_ID = request.json["auth_id"]
-        AUTH_KEY = request.json["auth_key"]
-        ID = request.json["id"]
-        KEY = request.json["key"]
+        authId = request.json["auth_id"]
+        authKey = request.json["auth_key"]
+        devSetupId = request.json["id"]
+        devSetupKey = request.json["key"]
 
         SETUP = config["SETUP_CREDS"]
-        SETUP_ID = SETUP["ID"]
-        SETUP_KEY = SETUP["key"]
+        setupId = SETUP["ID"]
+        setupKey = SETUP["key"]
 
         DEVELOPER = config["DEVELOPER"]
-        DEVELOPER_HOST = DEVELOPER["HOST"]
-        DEVELOPER_PORT = DEVELOPER["PORT"]
-        DEVELOPER_VERSION = DEVELOPER["VERSION"]
-        DEVELOPER_URL = (
-            f"{DEVELOPER_HOST}:{DEVELOPER_PORT}/{DEVELOPER_VERSION}/authenticate"
+        developerHost = DEVELOPER["HOST"]
+        developerPort = DEVELOPER["PORT"]
+        developerVersion = DEVELOPER["VERSION"]
+        developerUrl = (
+            f"{developerHost}:{developerPort}/{developerVersion}/authenticate"
         )
 
-        if ID != SETUP_ID and KEY != SETUP_KEY:
+        if devSetupId != setupId and devSetupKey != setupKey:
             logger.error("INVALID SETUP CREDENTIALS")
             raise Unauthorized()
         else:
-            data = {"auth_id": AUTH_ID, "auth_key": AUTH_KEY}
-            response = requests.post(url=DEVELOPER_URL, json=data)
+            data = {"auth_id": authId, "auth_key": authKey}
+            response = requests.post(url=developerUrl, json=data)
             if response.status_code == 200:
-                r = RabbitMQ(dev_id=AUTH_ID)
+                r = RabbitMQ(dev_id=authId)
                 try:
                     if r.exist():
                         r.delete()
@@ -163,20 +163,20 @@ def sms():
             raise BadRequest()
 
         payload = request.json["data"]
-        AUTH_ID = request.json["auth_id"]
+        authId = request.json["auth_id"]
 
         for data in payload:
-            TEXT = data["text"]
-            NUMBER = data["number"]
-            OPERATOR = data["operator_name"]
+            text = data["text"]
+            number = data["number"]
+            operatorName = data["operator_name"]
 
             sms_data = {
-                "operator_name": OPERATOR,
-                "text": TEXT,
-                "number": NUMBER,
+                "operator_name": operatorName,
+                "text": text,
+                "number": number,
             }
 
-            r = RabbitMQ(dev_id=AUTH_ID)
+            r = RabbitMQ(dev_id=authId)
             try:
                 if r.exist():
                     r.request_sms(data=sms_data)
@@ -212,31 +212,35 @@ def sms_operator():
         result = []
 
         for data in payload:
-            TEXT = data["text"]
-            NUMBER = data["number"]
+            text = data["text"]
+            number = data["number"]
 
             if not "operator_name" in data or not data["operator_name"]:
-                OPERATOR = ""
+                operatorName = ""
             else:
-                OPERATOR = data["operator_name"]
+                operatorName = data["operator_name"]
 
-            payload_data = {"number": NUMBER, "text": TEXT, "operator_name": OPERATOR}
+            payload_data = {
+                "number": number,
+                "text": text,
+                "operator_name": operatorName,
+            }
 
             try:
-                if not OPERATOR:
-                    operator = get_phonenumber_country(NUMBER)
+                if not operatorName:
+                    operator = get_phonenumber_country(number)
                     payload_data["operator_name"] = operator
                     result.append(payload_data)
                 else:
                     result.append(payload_data)
             except InvalidPhoneNUmber as error:
-                logger.error(f"INVALID PHONE NUMBER: {NUMBER}")
+                logger.error(f"INVALID PHONE NUMBER: {number}")
                 result.append(payload_data)
             except InvalidCountryCode as error:
-                logger.error(f"INVALID COUNTRY CODE: {NUMBER}")
+                logger.error(f"INVALID COUNTRY CODE: {number}")
                 result.append(payload_data)
             except MissingCountryCode as error:
-                logger.error(f"MISSING COUNTRY CODE: {NUMBER}")
+                logger.error(f"MISSING COUNTRY CODE: {number}")
                 result.append(payload_data)
 
         return jsonify(result), 200

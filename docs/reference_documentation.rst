@@ -24,6 +24,8 @@ API V1 Endpoints
       - None
       - * auth_id = STRING
         * data = [{text = STRING, number = STRING, operator_name = STRING}]
+        * callback_url = STRING
+        * uuid = STRING
     
     * - :ref:`Get Phone number operator name<Get Phone Number operator name>`
       - POST /v1/sms/operators
@@ -38,6 +40,25 @@ Examples using `curl <https://curl.se/>`_
 
 Send single SMS message
 ***********************
+.. note::
+
+    The ``uuid`` key is any random string provided by the user used to identify the request. If left empty, OpenAPI will populate the ``uuid`` key with a randomly generated uuid.
+
+    The ``callback_url`` will be invoked after the request is complete with a ``POST`` in the form:
+    
+    .. code-block:: json
+
+        {
+            "errors": [{
+                "operator_name":"",
+                "number":"",
+                "error_message": "",
+                "timestamp": ""
+                }],
+            "uuid": ""
+        }
+
+    - If the ``errors`` array is empty all messages were sent out successfully.
 
 .. code-block:: bash
 
@@ -49,7 +70,9 @@ Send single SMS message
         "operator_name":"",
         "text":"",
         "number":""
-        }]
+        }],
+    "callback_url": "",
+    "uuid": ""
     }'
 
 Send bulk SMS messages
@@ -75,24 +98,21 @@ Send bulk SMS messages
         "operator_name":"",
         "text":"",
         "number":""
-        }]
+        }],
+    "callback_url": "",
+    "uuid": ""
     }'
 
 Get Phone Number operator name
 ******************************
 
-If the ```operator_name``` key is an empty string or not present in the request, It will be generated and populated in the response. But if the ```operator_name``` key is present it won't be modified in the response.
+If the ``operator_name`` key is an empty string or not present in the request, It will be generated and populated in the response. But if the ``operator_name`` key is present it won't be modified in the response.
 
 .. code-block:: bash
 
     curl --location --request POST 'https://developers.smswithoutborders.com:14000/v1/sms/operators' \
     --header 'Content-Type: application/json' \
-    --data-raw '{
-    "[{
-        "operator_name":"",
-        "text":"",
-        "number":""
-        },
+    --data-raw '[
         {
         "operator_name":"",
         "text":"",
@@ -102,5 +122,10 @@ If the ```operator_name``` key is an empty string or not present in the request,
         "operator_name":"",
         "text":"",
         "number":""
-        }]
-    }'
+        },
+        {
+        "operator_name":"",
+        "text":"",
+        "number":""
+        }
+    ]'

@@ -157,9 +157,6 @@ def sms():
         if not "auth_id" in request.json or not request.json["auth_id"]:
             logger.error("no auth_id")
             raise BadRequest()
-        elif not "callback_url" in request.json or not request.json["callback_url"]:
-            logger.error("no callback_url")
-            raise BadRequest()
         elif not "data" in request.json:
             logger.error("no data")
             raise BadRequest()
@@ -169,7 +166,11 @@ def sms():
 
         payload = request.json["data"]
         authId = request.json["auth_id"]
-        callbackUrl = request.json["callback_url"]
+
+        if not "callback_url" in request.json or not request.json["callback_url"]:
+            callbackUrl = ""
+        else:
+            callbackUrl = request.json["callback_url"]
 
         if not "uuid" in request.json or not request.json["uuid"]:
             req_uuid = uuid1()
@@ -207,7 +208,13 @@ def sms():
                 errors.append(err_data)
 
         result = {"errors": errors, "uuid": str(req_uuid)}
-        requests.post(url=callbackUrl, json=result)
+
+        if len(callbackUrl) > 0:
+            try:
+                requests.post(url=callbackUrl, json=result)
+            except Exception as err:
+                logger.error(err)
+
         return "", 200
 
     except BadRequest as err:

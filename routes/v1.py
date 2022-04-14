@@ -14,6 +14,8 @@ from routes.helpers import (
     MissingCountryCode,
     get_phonenumber_country,
 )
+from uuid import uuid1
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 v1 = Blueprint("v1", __name__)
@@ -155,6 +157,9 @@ def sms():
         if not "auth_id" in request.json or not request.json["auth_id"]:
             logger.error("no auth_id")
             raise BadRequest()
+        elif not "callback_url" in request.json or not request.json["callback_url"]:
+            logger.error("no callback_url")
+            raise BadRequest()
         elif not "data" in request.json:
             logger.error("no data")
             raise BadRequest()
@@ -164,6 +169,14 @@ def sms():
 
         payload = request.json["data"]
         authId = request.json["auth_id"]
+        callbackUrl = request.json["callback_url"]
+
+        if not "uuid" in request.json or not request.json["uuid"]:
+            req_uuid = uuid1()
+        else:
+            req_uuid = request.json["uuid"]
+
+        errors = []
 
         for data in payload:
             text = data["text"]
@@ -184,7 +197,17 @@ def sms():
                     logger.error("USER IS NOT SUBSCRIBED")
                     raise Unauthorized()
             except Exception as error:
-                raise error
+                logger.error(error)
+                err_data = {
+                    "operator_name": operatorName,
+                    "number": number,
+                    "error_message": str(error),
+                    "timestamp": str(datetime.now()),
+                }
+                errors.append(err_data)
+
+        result = {"errors": errors, "uuid": str(req_uuid)}
+        requests.post(url=callbackUrl, json=result)
         return "", 200
 
     except BadRequest as err:

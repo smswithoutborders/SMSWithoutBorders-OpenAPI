@@ -13,6 +13,7 @@ from routes.helpers import (
     InvalidPhoneNUmber,
     MissingCountryCode,
     get_phonenumber_country,
+    check_phonenumber_E164
 )
 from uuid import uuid1
 from datetime import datetime
@@ -179,6 +180,8 @@ def sms():
 
         errors = []
 
+        r = RabbitMQ(dev_id=authId)
+
         for data in payload:
             text = data["text"]
             number = data["number"]
@@ -190,13 +193,40 @@ def sms():
                 "number": number,
             }
 
-            r = RabbitMQ(dev_id=authId)
             try:
                 if r.exist():
+                    check_phonenumber_E164(number)
                     r.request_sms(data=sms_data)
                 else:
                     logger.error("USER IS NOT SUBSCRIBED")
                     raise Unauthorized()
+            except InvalidPhoneNUmber as error:
+                logger.error(error)
+                err_data = {
+                    "operator_name": operatorName,
+                    "number": number,
+                    "error_message": str(error),
+                    "timestamp": str(datetime.now()),
+                }
+                errors.append(err_data)
+            except InvalidCountryCode as error:
+                logger.error(error)
+                err_data = {
+                    "operator_name": operatorName,
+                    "number": number,
+                    "error_message": str(error),
+                    "timestamp": str(datetime.now()),
+                }
+                errors.append(err_data)
+            except MissingCountryCode as error:
+                logger.error(error)
+                err_data = {
+                    "operator_name": operatorName,
+                    "number": number,
+                    "error_message": str(error),
+                    "timestamp": str(datetime.now()),
+                }
+                errors.append(err_data)
             except Exception as error:
                 logger.error(error)
                 err_data = {

@@ -17,7 +17,7 @@
 This project contains submodules to clone the full project including submodules use
 
 ```
-git clone --recurse-submodules https://github.com/smswithoutborders/SMSWithoutBorders-OpenAPI.git
+git submodule update --init --recursive --remote
 ```
 
 Setup [RabbitMQ Server](https://github.com/smswithoutborders/SMSWithoutBorders-Product-deps-RabbitMQ)

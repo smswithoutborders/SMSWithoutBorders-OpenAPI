@@ -14,7 +14,7 @@
 
 ## Dependencies
 
-This project contains submodules to clone the full project including submodules use
+This project contains submodules. To clone all submodules use
 
 ```
 git submodule update --init --recursive --remote

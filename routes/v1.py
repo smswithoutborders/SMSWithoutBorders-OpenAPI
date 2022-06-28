@@ -13,7 +13,10 @@ from routes.helpers import (
     InvalidPhoneNUmber,
     MissingCountryCode,
     get_phonenumber_country,
+    check_phonenumber_E164
 )
+from uuid import uuid1
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 v1 = Blueprint("v1", __name__)
@@ -165,6 +168,20 @@ def sms():
         payload = request.json["data"]
         authId = request.json["auth_id"]
 
+        if not "callback_url" in request.json or not request.json["callback_url"]:
+            callbackUrl = ""
+        else:
+            callbackUrl = request.json["callback_url"]
+
+        if not "uuid" in request.json or not request.json["uuid"]:
+            req_uuid = uuid1()
+        else:
+            req_uuid = request.json["uuid"]
+
+        errors = []
+
+        r = RabbitMQ(dev_id=authId)
+
         for data in payload:
             text = data["text"]
             number = data["number"]
@@ -176,15 +193,58 @@ def sms():
                 "number": number,
             }
 
-            r = RabbitMQ(dev_id=authId)
             try:
                 if r.exist():
+                    check_phonenumber_E164(number)
                     r.request_sms(data=sms_data)
                 else:
                     logger.error("USER IS NOT SUBSCRIBED")
                     raise Unauthorized()
+            except InvalidPhoneNUmber as error:
+                logger.error(error)
+                err_data = {
+                    "operator_name": operatorName,
+                    "number": number,
+                    "error_message": str(error),
+                    "timestamp": str(datetime.now()),
+                }
+                errors.append(err_data)
+            except InvalidCountryCode as error:
+                logger.error(error)
+                err_data = {
+                    "operator_name": operatorName,
+                    "number": number,
+                    "error_message": str(error),
+                    "timestamp": str(datetime.now()),
+                }
+                errors.append(err_data)
+            except MissingCountryCode as error:
+                logger.error(error)
+                err_data = {
+                    "operator_name": operatorName,
+                    "number": number,
+                    "error_message": str(error),
+                    "timestamp": str(datetime.now()),
+                }
+                errors.append(err_data)
             except Exception as error:
-                raise error
+                logger.error(error)
+                err_data = {
+                    "operator_name": operatorName,
+                    "number": number,
+                    "error_message": str(error),
+                    "timestamp": str(datetime.now()),
+                }
+                errors.append(err_data)
+
+        result = {"errors": errors, "uuid": str(req_uuid)}
+
+        if len(callbackUrl) > 0:
+            try:
+                requests.post(url=callbackUrl, json=result)
+            except Exception as err:
+                logger.error(err)
+
         return "", 200
 
     except BadRequest as err:

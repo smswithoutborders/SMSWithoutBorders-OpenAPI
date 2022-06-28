@@ -13,6 +13,7 @@ Welcome to OpenAPI
     reference_documentation
     setup
     usage
+    examples
     host_openapi
     host_client
 

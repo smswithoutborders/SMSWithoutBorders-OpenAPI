@@ -129,3 +129,8 @@ If the ``operator_name`` key is an empty string or not present in the request, I
         "number":""
         }
     ]'
+
+
+.. note::
+
+    The phone number format to be used in the request bodies of the API calls should be `E.164 <https://en.wikipedia.org/wiki/E.164>`_.

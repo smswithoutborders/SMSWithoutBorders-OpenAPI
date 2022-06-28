@@ -54,3 +54,13 @@ def get_phonenumber_country(MSISDN: str) -> str:
 
     except Exception as error:
         raise error
+
+def check_phonenumber_E164(MSISDN: str) -> bool:
+    try:
+        _number = phonenumbers.parse(MSISDN, "en")
+        if MSISDN != phonenumbers.format_number(_number, phonenumbers.PhoneNumberFormat.E164):
+                raise InvalidPhoneNUmber()
+        else:
+            return True
+    except Exception as error:
+        raise error

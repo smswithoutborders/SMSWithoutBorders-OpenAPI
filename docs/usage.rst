@@ -21,7 +21,7 @@ The configuration file (`config.ini <https://github.com/smswithoutborders/SMSWit
 
 .. code-block:: ini
 
-    [NODE]
+    [OPENAPI]
     api_id=
     api_key=
 

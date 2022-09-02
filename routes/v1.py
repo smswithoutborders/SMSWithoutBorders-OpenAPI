@@ -1,29 +1,39 @@
 import logging
-import requests
+logger = logging.getLogger(__name__)
 
-from flask import Blueprint, jsonify, request
-from error import BadRequest, Conflict, InternalServerError, Unauthorized
 from config_init import configuration
 
 config = configuration()
+SETUP = config["SETUP_CREDS"]
+DEVELOPER = config["DEVELOPER"]
+
+from flask import Blueprint
+from flask import jsonify
+from flask import request
 
 from RabbitMQ.src.rabbitmq import RabbitMQ
-from routes.helpers import (
-    InvalidCountryCode,
-    InvalidPhoneNUmber,
-    MissingCountryCode,
-    get_phonenumber_country,
-    check_phonenumber_E164
-)
+
+from routes.helpers import InvalidCountryCode
+from routes.helpers import InvalidPhoneNUmber
+from routes.helpers import MissingCountryCode
+from routes.helpers import get_phonenumber_country
+from routes.helpers import check_phonenumber_E164
+
+import requests
 from uuid import uuid1
 from datetime import datetime
 
-logger = logging.getLogger(__name__)
 v1 = Blueprint("v1", __name__)
 
+from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import InternalServerError
+from werkzeug.exceptions import Unauthorized
+from werkzeug.exceptions import Conflict
 
 @v1.route("/subscribe", methods=["POST"])
 def subscribe():
+    """
+    """
     try:
         if not "auth_id" in request.json or not request.json["auth_id"]:
             logger.error("no auth_id")
@@ -43,11 +53,9 @@ def subscribe():
         devSetupId = request.json["id"]
         devSetupKey = request.json["key"]
 
-        SETUP = config["SETUP_CREDS"]
         setupId = SETUP["ID"]
         setupKey = SETUP["key"]
 
-        DEVELOPER = config["DEVELOPER"]
         developerHost = DEVELOPER["HOST"]
         developerPort = DEVELOPER["PORT"]
         developerVersion = DEVELOPER["VERSION"]
@@ -58,9 +66,11 @@ def subscribe():
         if devSetupId != setupId and devSetupKey != setupKey:
             logger.error("INVALID SETUP CREDENTIALS")
             raise Unauthorized()
+
         else:
             data = {"auth_id": authId, "auth_key": authKey}
             response = requests.post(url=developerUrl, json=data)
+
             if response.status_code == 200:
                 r = RabbitMQ(dev_id=authId)
                 try:
@@ -68,28 +78,36 @@ def subscribe():
                         logger.error("USER IS SUBSCRIBED ALREADY")
                     else:
                         r.add_user(dev_key=authKey)
+
                 except Exception as error:
                     raise error
                 return "", 200
+
             elif response.status_code == 401:
                 logger.error("INVALID DEVELOPERS AUTH_KEY AND AUTH_ID")
                 raise Unauthorized()
+
     except BadRequest as err:
         return str(err), 400
+
     except Unauthorized as err:
         return str(err), 401
+
     except Conflict as err:
         return str(err), 409
-    except (InternalServerError) as err:
-        logger.error(err)
-        return "internal server error", 500
-    except (Exception) as err:
-        logger.error(err)
+
+    except InternalServerError as err:
+        logger.exception(err)
         return "internal server error", 500
 
+    except Exception as err:
+        logger.exception(err)
+        return "internal server error", 500
 
 @v1.route("/unsubscribe", methods=["DELETE"])
 def unsubscribe():
+    """
+    """
     try:
         if not "auth_id" in request.json or not request.json["auth_id"]:
             logger.error("no auth_id")
@@ -109,11 +127,9 @@ def unsubscribe():
         devSetupId = request.json["id"]
         devSetupKey = request.json["key"]
 
-        SETUP = config["SETUP_CREDS"]
         setupId = SETUP["ID"]
         setupKey = SETUP["key"]
 
-        DEVELOPER = config["DEVELOPER"]
         developerHost = DEVELOPER["HOST"]
         developerPort = DEVELOPER["PORT"]
         developerVersion = DEVELOPER["VERSION"]
@@ -124,9 +140,11 @@ def unsubscribe():
         if devSetupId != setupId and devSetupKey != setupKey:
             logger.error("INVALID SETUP CREDENTIALS")
             raise Unauthorized()
+
         else:
             data = {"auth_id": authId, "auth_key": authKey}
             response = requests.post(url=developerUrl, json=data)
+
             if response.status_code == 200:
                 r = RabbitMQ(dev_id=authId)
                 try:
@@ -137,23 +155,29 @@ def unsubscribe():
                 except Exception as error:
                     raise error
                 return "", 200
+
             elif response.status_code == 401:
                 logger.error("INVALID DEVELOPERS AUTH_KEY AND AUTH_ID")
                 raise Unauthorized()
+
     except BadRequest as err:
         return str(err), 400
+
     except Unauthorized as err:
         return str(err), 401
-    except (InternalServerError) as err:
-        logger.error(err)
-        return "internal server error", 500
-    except (Exception) as err:
-        logger.error(err)
+        
+    except InternalServerError as err:
+        logger.exception(err)
         return "internal server error", 500
 
+    except Exception as err:
+        logger.exception(err)
+        return "internal server error", 500
 
 @v1.route("/sms", methods=["POST"])
 def sms():
+    """
+    """
     try:
         if not "auth_id" in request.json or not request.json["auth_id"]:
             logger.error("no auth_id")
@@ -169,7 +193,7 @@ def sms():
         authId = request.json["auth_id"]
 
         if not "callback_url" in request.json or not request.json["callback_url"]:
-            callbackUrl = ""
+            callbackUrl = None
         else:
             callbackUrl = request.json["callback_url"]
 
@@ -200,6 +224,7 @@ def sms():
                 else:
                     logger.error("USER IS NOT SUBSCRIBED")
                     raise Unauthorized()
+
             except InvalidPhoneNUmber as error:
                 logger.error(error)
                 err_data = {
@@ -209,6 +234,7 @@ def sms():
                     "timestamp": str(datetime.now()),
                 }
                 errors.append(err_data)
+
             except InvalidCountryCode as error:
                 logger.error(error)
                 err_data = {
@@ -218,6 +244,7 @@ def sms():
                     "timestamp": str(datetime.now()),
                 }
                 errors.append(err_data)
+
             except MissingCountryCode as error:
                 logger.error(error)
                 err_data = {
@@ -227,8 +254,9 @@ def sms():
                     "timestamp": str(datetime.now()),
                 }
                 errors.append(err_data)
+
             except Exception as error:
-                logger.error(error)
+                logger.exception(error)
                 err_data = {
                     "operator_name": operatorName,
                     "number": number,
@@ -239,30 +267,38 @@ def sms():
 
         result = {"errors": errors, "uuid": str(req_uuid)}
 
-        if len(callbackUrl) > 0:
-            try:
-                requests.post(url=callbackUrl, json=result)
-            except Exception as err:
-                logger.error(err)
+        if callbackUrl:
+            callbacks = callbackUrl.split(",")
+
+            for callback in callbacks:
+                try:
+                    requests.post(url=callback.strip(), json=result)
+                except Exception as err:
+                    logger.error(err)
 
         return "", 200
 
     except BadRequest as err:
         return str(err), 400
+
     except Unauthorized as err:
         return str(err), 401
+
     except Conflict as err:
         return str(err), 409
-    except (InternalServerError) as err:
-        logger.error(err)
-        return "internal server error", 500
-    except (Exception) as err:
-        logger.error(err)
+
+    except InternalServerError as err:
+        logger.exception(err)
         return "internal server error", 500
 
+    except Exception as err:
+        logger.exception(err)
+        return "internal server error", 500
 
 @v1.route("/sms/operators", methods=["POST"])
 def sms_operator():
+    """
+    """
     try:
         if not isinstance(request.json, list):
             logger.error("Request body most be a list")
@@ -272,8 +308,12 @@ def sms_operator():
         result = []
 
         for data in payload:
-            text = data["text"]
             number = data["number"]
+
+            if not "text" in data or not data["text"]:
+                text = ""
+            else:
+                text = data["text"]
 
             if not "operator_name" in data or not data["operator_name"]:
                 operatorName = ""
@@ -291,27 +331,34 @@ def sms_operator():
                     operator = get_phonenumber_country(number)
                     payload_data["operator_name"] = operator
                     result.append(payload_data)
+
                 else:
                     result.append(payload_data)
-            except InvalidPhoneNUmber as error:
-                logger.error(f"INVALID PHONE NUMBER: {number}")
+
+            except InvalidPhoneNUmber:
+                logger.error("INVALID PHONE NUMBER: %s" % number)
                 result.append(payload_data)
-            except InvalidCountryCode as error:
-                logger.error(f"INVALID COUNTRY CODE: {number}")
+
+            except InvalidCountryCode:
+                logger.error("INVALID COUNTRY CODE: %s" % number)
                 result.append(payload_data)
-            except MissingCountryCode as error:
-                logger.error(f"MISSING COUNTRY CODE: {number}")
+
+            except MissingCountryCode:
+                logger.error("MISSING COUNTRY CODE: %s" % number)
                 result.append(payload_data)
 
         return jsonify(result), 200
 
     except BadRequest as err:
         return str(err), 400
+
     except Unauthorized as err:
         return str(err), 401
+
     except InternalServerError as err:
-        logger.error(err)
+        logger.exception(err)
         return "internal server error", 500
+
     except Exception as err:
-        logger.error(err)
+        logger.exception(err)
         return "internal server error", 500

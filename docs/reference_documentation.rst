@@ -58,7 +58,8 @@ Send single SMS message
             "uuid": ""
         }
 
-    - If the ``errors`` array is empty all messages were sent out successfully.
+    - If the ``errors`` array is empty all messages were requested successfully.
+    - ``callback_url`` field accepts multiple urls, seperate each with a comma. Example `"callback_url":"https://example.com,https://example1.com,https://example2.com"`
 
 .. code-block:: bash
 

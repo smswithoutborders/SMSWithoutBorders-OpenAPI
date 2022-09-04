@@ -72,12 +72,12 @@ cp config/example.default.ini config/default.ini
 
 ### Access configurations
 
-**[setup.ini](../example.setup.ini)** is the access file.
+**[setup.ini](../config/example.setup.ini)** is the access file.
 
 To set up access, copy the template files "example.setup.ini" and rename to "setup.ini"
 
 ```
-cp example.setup.ini setup.ini
+cp config/example.setup.ini config/setup.ini
 ```
 
 ## How to use

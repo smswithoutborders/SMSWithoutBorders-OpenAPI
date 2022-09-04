@@ -41,7 +41,7 @@ class Metric_Model:
             logger.error("FAILED TO CREATE METRICS FOR %s CHECK LOGS" % uid)
             raise InternalServerError(err)
 
-    def find(self, auth_id: str) -> list:
+    def find(self, auth_id: str) -> dict:
         """
         """
         try:
@@ -55,18 +55,29 @@ class Metric_Model:
                 .dicts()
             )
 
-            # check for no user
-            if len(metrics) < 1:
-                logger.error("No metrics for '%s'" % auth_id)
-                return []
+            requested = 0
+            failed = 0
 
             result = []
 
             for metric in metrics:
+                if metric["status"] == "requested":
+                    requested += 1
+                elif metric["status"] == "failed":
+                    failed += 1
+
                 result.append(metric)
 
             logger.info("- Metrics for '%s' found" % auth_id)
-            return result
+
+            return {
+                "summary": {
+                    "total": len(result),
+                    "requested": requested,
+                    "failed": failed,
+                },
+                "data": result
+            }
 
         except DatabaseError as err:
             logger.error("FAILED FINDING METRICS FOR %s CHECK LOGS" % auth_id)

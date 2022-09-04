@@ -448,3 +448,69 @@ def sms_operator():
     except Exception as err:
         logger.exception(err)
         return "internal server error", 500
+
+@v1.route("/metrics", methods=["POST"])
+def metrics():
+    """
+    """
+    try:
+        Metrics = Metric_Model()
+
+        if not "auth_id" in request.json or not request.json["auth_id"]:
+            logger.error("no auth_id")
+            raise BadRequest()
+        elif not "auth_key" in request.json or not request.json["auth_key"]:
+            logger.error("no auth_key")
+            raise BadRequest()
+        elif not "key" in request.json or not request.json["key"]:
+            logger.error("no key")
+            raise BadRequest()
+        elif not "id" in request.json or not request.json["id"]:
+            logger.error("no id")
+            raise BadRequest()
+
+        authId = request.json["auth_id"]
+        authKey = request.json["auth_key"]
+        devSetupId = request.json["id"]
+        devSetupKey = request.json["key"]
+
+        setupId = SETUP["ID"]
+        setupKey = SETUP["key"]
+
+        developerHost = DEVELOPER["HOST"]
+        developerPort = DEVELOPER["PORT"]
+        developerVersion = DEVELOPER["VERSION"]
+        developerUrl = (
+            f"{developerHost}:{developerPort}/{developerVersion}/authenticate"
+        )
+
+        if devSetupId != setupId and devSetupKey != setupKey:
+            logger.error("INVALID SETUP CREDENTIALS")
+            raise Unauthorized()
+
+        else:
+            data = {"auth_id": authId, "auth_key": authKey}
+            response = requests.post(url=developerUrl, json=data)
+
+            if response.status_code == 200:
+                data = Metrics.find(auth_id=authId)
+
+                return jsonify(data), 200
+
+            elif response.status_code == 401:
+                logger.error("INVALID DEVELOPERS AUTH_KEY AND AUTH_ID")
+                raise Unauthorized()
+
+    except BadRequest as err:
+        return str(err), 400
+
+    except Unauthorized as err:
+        return str(err), 401
+
+    except InternalServerError as err:
+        logger.exception(err)
+        return "internal server error", 500
+
+    except Exception as err:
+        logger.exception(err)
+        return "internal server error", 500

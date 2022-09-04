@@ -13,7 +13,7 @@ def configuration() -> dict:
     config = ConfigParser()
     config.read(config_filepath)
 
-    setup_filepath = os.path.join(os.path.dirname(__file__), 'setup.ini')
+    setup_filepath = os.path.join(os.path.dirname(__file__), 'config', 'setup.ini')
 
     if not os.path.exists(setup_filepath):
         error = "Setup file not found at '%s'" % setup_filepath

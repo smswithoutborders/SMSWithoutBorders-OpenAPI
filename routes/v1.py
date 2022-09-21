@@ -234,7 +234,7 @@ def sms():
                         phone_number=sms_data["number"],
                         operator_name=sms_data["operator_name"],
                         status="requested",
-                        message="SMS has been requested successfully",
+                        message="SMS has been successfully requested",
                         auth_id=authId
                     )
                 else:
@@ -337,7 +337,7 @@ def sms():
                     phone_number=sms_data["number"],
                     operator_name=sms_data["operator_name"],
                     status="failed",
-                    message=str(error),
+                    message="An unexpected error has occurred. Please contact your system administrator.",
                     auth_id=authId
                 )
 

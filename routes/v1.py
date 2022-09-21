@@ -449,11 +449,13 @@ def sms_operator():
         logger.exception(err)
         return "internal server error", 500
 
-@v1.route("/metrics", methods=["POST"])
+@v1.route("/metrics", methods=["POST", "PUT"])
 def metrics():
     """
     """
     try:
+        method = request.method.lower()
+
         Metrics = Metric_Model()
 
         if not "auth_id" in request.json or not request.json["auth_id"]:
@@ -489,17 +491,40 @@ def metrics():
             raise Unauthorized()
 
         else:
-            data = {"auth_id": authId, "auth_key": authKey}
-            response = requests.post(url=developerUrl, json=data)
+            if method == "post":
+                data = {"auth_id": authId, "auth_key": authKey}
+                response = requests.post(url=developerUrl, json=data)
 
-            if response.status_code == 200:
-                data = Metrics.find(auth_id=authId)
+                if response.status_code == 200:
+                    data = Metrics.find(auth_id=authId)
 
-                return jsonify(data), 200
+                    return jsonify(data), 200
 
-            elif response.status_code == 401:
-                logger.error("INVALID DEVELOPERS AUTH_KEY AND AUTH_ID")
-                raise Unauthorized()
+                elif response.status_code == 401:
+                    logger.error("INVALID DEVELOPERS AUTH_KEY AND AUTH_ID")
+                    raise Unauthorized()
+
+            elif method == "put":
+                data = {"auth_id": authId, "auth_key": authKey}
+                response = requests.post(url=developerUrl, json=data)
+
+                if response.status_code == 200:
+                    if not "old_auth_id" in request.json or not request.json["old_auth_id"]:
+                        logger.error("no old_auth_id")
+                        raise BadRequest()
+
+                    old_auth_id = request.json["old_auth_id"]
+                   
+                    Metrics.update(
+                        auth_id=old_auth_id, 
+                        new_auth_id=authId
+                    )
+
+                    return "", 200
+
+                elif response.status_code == 401:
+                    logger.error("INVALID DEVELOPERS AUTH_KEY AND AUTH_ID")
+                    raise Unauthorized()
 
     except BadRequest as err:
         return str(err), 400

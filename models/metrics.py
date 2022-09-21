@@ -83,47 +83,60 @@ class Metric_Model:
             logger.error("FAILED FINDING METRICS FOR %s CHECK LOGS" % auth_id)
             raise InternalServerError(err)
 
-    def update(self, uid: str, status: str) -> bool:
+    def update(self, uid: str = None, status: str = None, auth_id: str = None, new_auth_id: str = None) -> bool:
         try:
             """
             """
-            logger.debug("finding metrics %s ..." % uid)
+            if uid and status:
+                logger.debug("finding metrics %s ..." % uid)
 
-            metrics = (
-                self.Metrics.select()
-                .where(
-                    self.Metrics.uid == uid
+                metrics = (
+                    self.Metrics.select()
+                    .where(
+                        self.Metrics.uid == uid
+                    )
+                    .dicts()
                 )
-                .dicts()
-            )
 
-            # check for duplicates
-            if len(metrics) > 1:
-                logger.error("Multiple metric %s found" % uid)
-                raise Conflict()
+                # check for duplicates
+                if len(metrics) > 1:
+                    logger.error("Multiple metric %s found" % uid)
+                    raise Conflict()
 
-            # check for no metric
-            if len(metrics) < 1:
-                logger.error("No metric %s found" % uid)
-                raise Unauthorized()
+                # check for no metric
+                if len(metrics) < 1:
+                    logger.error("No metric %s found" % uid)
+                    raise Unauthorized()
 
-            logger.debug("updating metric %s with status %s ..." % (uid, status))
+                logger.debug("updating metric %s with status %s ..." % (uid, status))
 
-            upd_metric = (
-                self.Metric.update(
-                    status=status
+                upd_metric = (
+                    self.Metrics.update(
+                        status=status
+                    )
+                    .where(
+                        self.Metrics.uid == uid
+                    )
                 )
-                .where(
-                    self.Metrics.uid == uid
+
+            elif auth_id and new_auth_id:
+                logger.debug("updating metrics for auth_id '%s' with new_auth_id '%s' ..." % (auth_id, new_auth_id))
+
+                upd_metric = (
+                    self.Metrics.update(
+                        auth_id=new_auth_id
+                    )
+                    .where(
+                        self.Metrics.auth_id == auth_id
+                    )
                 )
-            )
                 
             upd_metric.execute()
 
-            logger.info("- SUCCESSFULLY UPDATED METRIC %s" % uid)
+            logger.info("- SUCCESSFULLY UPDATED METRIC")
             
             return True
 
         except DatabaseError as err:
-            logger.error("FAILED UPDATING METRIC %s CHECK LOGS" % uid)
+            logger.error("FAILED UPDATING METRIC CHECK LOGS")
             raise InternalServerError(err)

@@ -2,10 +2,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 from config_init import configuration
-
 config = configuration()
+
 SETUP = config["SETUP_CREDS"]
 DEVELOPER = config["DEVELOPER"]
+dev_cookie_name = "SWOBDev"
 
 from flask import Blueprint
 from flask import jsonify
@@ -21,8 +22,12 @@ from routes.helpers import get_phonenumber_country
 from routes.helpers import check_phonenumber_E164
 
 from models.metrics import Metric_Model
+from models.sessions import Session_Model
 
 import requests
+import json
+from base64 import b64decode
+
 from uuid import uuid1
 from uuid import uuid4
 
@@ -525,6 +530,64 @@ def metrics():
                 elif response.status_code == 401:
                     logger.error("INVALID DEVELOPERS AUTH_KEY AND AUTH_ID")
                     raise Unauthorized()
+
+    except BadRequest as err:
+        return str(err), 400
+
+    except Unauthorized as err:
+        return str(err), 401
+
+    except InternalServerError as err:
+        logger.exception(err)
+        return "internal server error", 500
+
+    except Exception as err:
+        logger.exception(err)
+        return "internal server error", 500
+
+@v1.route("/metrics/<string:uid>", methods=["PUT"])
+def updateMetricStatus(uid):
+    """
+    """
+    try:
+        if not request.cookies.get(dev_cookie_name):
+            logger.error("No dev cookie")
+            raise Unauthorized()
+        elif not "status" in request.json or not request.json["status"]:
+            logger.error("No status provided")
+            raise Unauthorized()
+        elif request.json["status"] not in ["requested", "failed", "delivered"]:
+            logger.error("Invalid status '%s'" % request.json["status"])
+            raise Unauthorized()
+        elif not "message" in request.json or not request.json["message"]:
+            logger.error("No message provided")
+            raise Unauthorized()
+
+        status = request.json["status"]
+        message = request.json["message"]
+        
+        dev_cookie = json.loads(b64decode(request.cookies.get(dev_cookie_name)))
+        dev_uid = dev_cookie["uid"]
+        dev_user_agent = dev_cookie["userAgent"]
+        dev_verification_path = dev_cookie["verification_path"]
+
+        Session = Session_Model()
+        Metrics = Metric_Model()
+
+        Session.authenticate(
+            uid=dev_uid,
+            user_agent=dev_user_agent,
+            cookie=dev_cookie["cookie"],
+            verification_path=dev_verification_path
+        )
+
+        Metrics.update(
+            uid=uid,
+            status=status,
+            message=message
+        )
+
+        return "", 200
 
     except BadRequest as err:
         return str(err), 400

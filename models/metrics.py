@@ -57,6 +57,7 @@ class Metric_Model:
 
             requested = 0
             failed = 0
+            delivered = 0
 
             result = []
 
@@ -65,6 +66,8 @@ class Metric_Model:
                     requested += 1
                 elif metric["status"] == "failed":
                     failed += 1
+                elif metric["status"] == "delivered":
+                    delivered += 1
 
                 result.append(metric)
 
@@ -75,6 +78,7 @@ class Metric_Model:
                     "total": len(result),
                     "requested": requested,
                     "failed": failed,
+                    "delivered": delivered
                 },
                 "data": result
             }
@@ -83,7 +87,7 @@ class Metric_Model:
             logger.error("FAILED FINDING METRICS FOR %s CHECK LOGS" % auth_id)
             raise InternalServerError(err)
 
-    def update(self, uid: str = None, status: str = None, auth_id: str = None, new_auth_id: str = None) -> bool:
+    def update(self, uid: str = None, status: str = None, message: str = None, auth_id: str = None, new_auth_id: str = None) -> bool:
         try:
             """
             """
@@ -112,7 +116,8 @@ class Metric_Model:
 
                 upd_metric = (
                     self.Metrics.update(
-                        status=status
+                        status=status,
+                        message=message
                     )
                     .where(
                         self.Metrics.uid == uid

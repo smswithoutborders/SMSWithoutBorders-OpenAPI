@@ -11,6 +11,7 @@ dev_cookie_name = "SWOBDev"
 from flask import Blueprint
 from flask import jsonify
 from flask import request
+from flask import abort
 
 from RabbitMQ.src.rabbitmq import RabbitMQ
 
@@ -34,11 +35,13 @@ from uuid import uuid4
 from datetime import datetime
 
 v1 = Blueprint("v1", __name__)
+dev_v1 = Blueprint("dev_v1", __name__)
 
 from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import InternalServerError
 from werkzeug.exceptions import Unauthorized
 from werkzeug.exceptions import Conflict
+from werkzeug.exceptions import Forbidden
 
 @v1.route("/subscribe", methods=["POST"])
 def subscribe():
@@ -545,7 +548,26 @@ def metrics():
         logger.exception(err)
         return "internal server error", 500
 
-@v1.route("/metrics/<string:uid>", methods=["PUT"])
+@dev_v1.before_request
+def check_request_origin():
+    """
+    """
+    try:
+        origin = request.remote_addr
+        if origin not in ['127.0.0.1']:
+            logger.error("'%s' tried to access an internal route" % origin)
+            raise Forbidden()
+        else:
+            logger.info("RemoteIp: %s" % origin)
+
+    except Forbidden as err:
+        return str(err), 403
+
+    except Exception as error:
+        logger.exception(error)
+        return "internal server error", 500
+
+@dev_v1.route("/metrics/<string:uid>", methods=["PUT"])
 def updateMetricStatus(uid):
     """
     """
@@ -556,7 +578,7 @@ def updateMetricStatus(uid):
         elif not "status" in request.json or not request.json["status"]:
             logger.error("No status provided")
             raise Unauthorized()
-        elif request.json["status"] not in ["requested", "failed", "delivered"]:
+        elif request.json["status"] not in ["requested", "failed", "delivered", "sent"]:
             logger.error("Invalid status '%s'" % request.json["status"])
             raise Unauthorized()
         elif not "message" in request.json or not request.json["message"]:

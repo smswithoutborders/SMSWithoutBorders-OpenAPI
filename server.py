@@ -42,6 +42,7 @@ rotatory_handler.setFormatter(formatter)
 logger.addHandler(rotatory_handler)
 
 from routes.v1 import v1
+from routes.v1 import dev_v1
 from flask_swagger_ui import get_swaggerui_blueprint
 
 from controllers.SSL import isSSL
@@ -60,6 +61,7 @@ swaggerui_blueprint = get_swaggerui_blueprint(
 app.register_blueprint(swaggerui_blueprint)
 
 app.register_blueprint(v1, url_prefix="/v1")
+app.register_blueprint(dev_v1, url_prefix="/v1")
 
 checkSSL = isSSL(path_crt_file=SSL["CERTIFICATE"], path_key_file=SSL["KEY"], path_pem_file=SSL["PEM"])
 

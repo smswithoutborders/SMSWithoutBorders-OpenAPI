@@ -32,6 +32,11 @@ API V1 Endpoints
       - None
       - * [{text = STRING, number = STRING, operator_name = STRING}]
 
+    * - :ref:`Update message status<Update message status>`
+      - PUT /v1/metrics/<uid>
+      - * uid = STRING
+      - * [{status = STRING, message = STRING}]
+
 .. warning::
 
     We advise you to use this endpoint safely in the back-end to avoid exposing your developer's token to unauthorized persons.
@@ -61,6 +66,8 @@ Send single SMS message
     - If the ``errors`` array is empty all messages were requested successfully.
     - ``callback_url`` field accepts multiple urls, seperate each with a comma. Example `"callback_url":"https://example.com,https://example1.com,https://example2.com"`
 
+    The phone number format to be used in the request bodies of the API calls should be `E.164 <https://en.wikipedia.org/wiki/E.164>`_.
+
 .. code-block:: bash
 
     curl --location --request POST 'https://developers.smswithoutborders.com:14000/v1/sms' \
@@ -78,6 +85,29 @@ Send single SMS message
 
 Send bulk SMS messages
 **********************
+
+.. note::
+
+    The ``uuid`` key is any random string provided by the user used to identify the request. If left empty, OpenAPI will populate the ``uuid`` key with a randomly generated uuid.
+
+    The ``callback_url`` will be invoked after the request is complete with a ``POST`` in the form:
+    
+    .. code-block:: json
+
+        {
+            "errors": [{
+                "operator_name":"",
+                "number":"",
+                "error_message": "",
+                "timestamp": ""
+                }],
+            "uuid": ""
+        }
+
+    - If the ``errors`` array is empty all messages were requested successfully.
+    - ``callback_url`` field accepts multiple urls, seperate each with a comma. Example `"callback_url":"https://example.com,https://example1.com,https://example2.com"`
+
+    The phone number format to be used in the request bodies of the API calls should be `E.164 <https://en.wikipedia.org/wiki/E.164>`_.
 
 .. code-block:: bash
 
@@ -131,7 +161,69 @@ If the ``operator_name`` key is an empty string or not present in the request, I
         }
     ]'
 
+Update message status
+*********************
+
+There are two steps involved in the update process
+
+1. Authorization
+----------------
 
 .. note::
+    
+    This step requires the user to have an `SMSWithoutBorders Developer Back-end server <https://github.com/smswithoutborders/SMSWithoutBorders-Dev-BE>`_ setup.
 
-    The phone number format to be used in the request bodies of the API calls should be `E.164 <https://en.wikipedia.org/wiki/E.164>`_.
+The user has to provide the following in the `request body <https://developer.mozilla.org/en-US/docs/Web/API/Request/body>`_:
+
+- Auth key (From an `SMSWithoutBorders Developer Back-end server <https://github.com/smswithoutborders/SMSWithoutBorders-Dev-BE>`_)
+- Auth id (From an `SMSWithoutBorders Developer Back-end server <https://github.com/smswithoutborders/SMSWithoutBorders-Dev-BE>`_)
+
+The user also must configure their `header <https://developer.mozilla.org/en-US/docs/Glossary/Representation_header>`_ to:
+
+- `Content-Type <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type>`_ = application/json
+
+Here is an example. Running `SMSWithoutBorders Developer Back-end server <https://github.com/smswithoutborders/SMSWithoutBorders-Dev-BE>`_ locally on port 3000
+
+.. code-block:: bash
+
+    curl --location --request POST 'http://localhost:3000/v1/authenticate' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{
+        "auth_key": "",
+        "auth_id": ""
+    }'
+
+If successful a `cookie <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cookie>`_ is set on the user's agent valid for two hours. The cookie is used to track the user's seesion. Also the `response <https://developer.mozilla.org/en-US/docs/Web/API/Response/body>`_ should have a `status <https://developer.mozilla.org/en-US/docs/Web/HTTP/Status>`_ of ``200`` and the body should contain an empty object
+
+.. code-block:: bash
+
+    {}
+
+2. Update status
+----------------
+
+.. note::
+    
+    This step requires the user to have an `SMSWithoutBorders Developer Back-end server <https://github.com/smswithoutborders/SMSWithoutBorders-Dev-BE>`_ and `SMSWithoutBorders OpenAPI <https://github.com/smswithoutborders/SMSWithoutBorders-OpenAPI>`_ setup.
+
+The user has to provide the following in the `request body <https://developer.mozilla.org/en-US/docs/Web/API/Request/body>`_:
+
+- status (The message status. Either sent, delivered, failed, requested)
+- message (Information regarding the message status)
+
+The user also must configure their `header <https://developer.mozilla.org/en-US/docs/Glossary/Representation_header>`_ to:
+
+- `Content-Type <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type>`_ = application/json
+
+Here is an example. Running `SMSWithoutBorders OpenAPI <https://github.com/smswithoutborders/SMSWithoutBorders-OpenAPI>`_ locally on port 4000
+
+.. code-block:: bash
+
+    curl --location --request POST 'http://localhost:4000/v1/metrics/<uid>' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{
+        "status": "",
+        "message": ""
+    }'
+
+If successful the `response <https://developer.mozilla.org/en-US/docs/Web/API/Response/body>`_ should have a `status <https://developer.mozilla.org/en-US/docs/Web/HTTP/Status>`_ of ``200``.

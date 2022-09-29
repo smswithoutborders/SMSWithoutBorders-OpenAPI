@@ -203,8 +203,10 @@ If successful a `cookie <https://developer.mozilla.org/en-US/docs/Web/HTTP/Heade
 ----------------
 
 .. note::
-    
-    This step requires the user to have an `SMSWithoutBorders Developer Back-end server <https://github.com/smswithoutborders/SMSWithoutBorders-Dev-BE>`_ and `SMSWithoutBorders OpenAPI <https://github.com/smswithoutborders/SMSWithoutBorders-OpenAPI>`_ setup.
+        
+    This step requires the user to have an `SMSWithoutBorders OpenAPI <https://github.com/smswithoutborders/SMSWithoutBorders-OpenAPI>`_ setup and `configured <https://github.com/smswithoutborders/SMSWithoutBorders-OpenAPI/blob/main/docs/CONFIGURATIONS.md#setup>`_ to communitcate with their `SMSWithoutBorders Developer Back-end server <https://github.com/smswithoutborders/SMSWithoutBorders-Dev-BE>`_.
+
+    The user has to make sure `SMSWithoutBorders Developer Back-end server <https://github.com/smswithoutborders/SMSWithoutBorders-Dev-BE>`_ is running.
 
 The user has to provide the following in the `request body <https://developer.mozilla.org/en-US/docs/Web/API/Request/body>`_:
 

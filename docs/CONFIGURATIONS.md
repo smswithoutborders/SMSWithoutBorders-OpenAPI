@@ -14,10 +14,10 @@
 
 ## Dependencies
 
-This project contains submodules to clone the full project including submodules use
+This project contains submodules. To clone all submodules use
 
 ```
-git clone --recurse-submodules https://github.com/smswithoutborders/SMSWithoutBorders-OpenAPI.git
+git submodule update --init --recursive --remote
 ```
 
 Setup [RabbitMQ Server](https://github.com/smswithoutborders/SMSWithoutBorders-Product-deps-RabbitMQ)
@@ -72,12 +72,12 @@ cp config/example.default.ini config/default.ini
 
 ### Access configurations
 
-**[setup.ini](../example.setup.ini)** is the access file.
+**[setup.ini](../config/example.setup.ini)** is the access file.
 
 To set up access, copy the template files "example.setup.ini" and rename to "setup.ini"
 
 ```
-cp example.setup.ini setup.ini
+cp config/example.setup.ini config/setup.ini
 ```
 
 ## How to use

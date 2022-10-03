@@ -1,24 +1,27 @@
+from asyncio.log import logger
 import phonenumbers
 from phonenumbers import geocoder, carrier
 
 
 class InvalidPhoneNUmber(Exception):
-    def __init__(self, message="INVALID PHONE NUMBER"):
+    def __init__(self, message="Invalid phone number"):
         self.message = message
         super().__init__(self.message)
-
 
 class InvalidCountryCode(Exception):
-    def __init__(self, message="INVALID COUNTRY CODE"):
+    def __init__(self, message="Invalid country code"):
         self.message = message
         super().__init__(self.message)
-
 
 class MissingCountryCode(Exception):
-    def __init__(self, message="MISSING COUNTRY CODE"):
+    def __init__(self, message="Missing country code"):
         self.message = message
         super().__init__(self.message)
 
+class NotE164PhoneNumberFormat(Exception):
+    def __init__(self, message="Phone number is not E164 Format"):
+        self.message = message
+        super().__init__(self.message)
 
 def get_phonenumber_country(MSISDN: str) -> str:
     """Returns the country of MSISDN.
@@ -56,11 +59,16 @@ def get_phonenumber_country(MSISDN: str) -> str:
         raise error
 
 def check_phonenumber_E164(MSISDN: str) -> bool:
+    """
+    """
     try:
         _number = phonenumbers.parse(MSISDN, "en")
+
         if MSISDN != phonenumbers.format_number(_number, phonenumbers.PhoneNumberFormat.E164):
-                raise InvalidPhoneNUmber()
+            raise NotE164PhoneNumberFormat()
         else:
             return True
+
     except Exception as error:
-        raise error
+        logger.exception(error)
+        raise NotE164PhoneNumberFormat()

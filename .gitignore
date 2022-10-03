@@ -1,9 +1,11 @@
 setup.ini
+default.ini
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 logs/*
+.vscode/
 
 # C extensions
 *.so

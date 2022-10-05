@@ -1,5 +1,5 @@
 Host OpenAPI
 ============
 
-`read more ... <https://github.com/smswithoutborders/SMSWithoutBorders-OpenAPI/blob/documentation/docs/CONFIGURATIONS.md>`_
+`read more ... <https://github.com/smswithoutborders/SMSWithoutBorders-OpenAPI/blob/main/docs/CONFIGURATIONS.md>`_
 

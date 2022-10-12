@@ -28,4 +28,6 @@ def configuration() -> dict:
         "SSL_API": config["SSL_API"],
         "SETUP_CREDS": setup["CREDENTIALS"],
         "DEVELOPER": config["DEVELOPER"],
+        "TWILIO": config["TWILIO"],
+        "COUNTRY": config["COUNTRY"]
     }

@@ -233,6 +233,11 @@ def sms():
         else:
             service_sid = request.json["twilio_service_sid"]
 
+        if not "twilio_from" in request.json or not request.json["twilio_from"]:
+            _from = None
+        else:
+            _from = request.json["twilio_from"]
+
         if not "whitelist" in request.json or not request.json["whitelist"]:
             whitelist = []
         else:
@@ -254,12 +259,13 @@ def sms():
 
                 country_code = "+" + get_phonenumber_country_code(number)
 
-                if account_sid and auth_token and service_sid and country_code not in whitelist:
+                if account_sid and auth_token and (service_sid or _from) and country_code not in whitelist:
                     try:
                         Twilio = Twilio_Model(
                             account_sid=account_sid,
                             auth_token=auth_token,
-                            service_sid=service_sid
+                            service_sid=service_sid,
+                            _from = _from
                         )
 
                         sms_data = {

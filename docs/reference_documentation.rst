@@ -52,9 +52,9 @@ Send single SMS message
 
 .. note::
 
-    To send messages using `Twilio Messaging Service <https://twilio.com>`_, ``twilio_account_sid``, ``twilio_auth_token`` and, ``twilio_service_sid`` fields should be present in the request body.
+    To send messages using `Twilio Messaging Service <https://twilio.com>`_, ``twilio_account_sid``, ``twilio_auth_token`` and, either ``twilio_service_sid`` or ``twilio_from`` fields should be present in the request body.
 
-    Messages will ``NOT`` be sent to phone numbers with `country calling codes <https://en.wikipedia.org/wiki/List_of_country_calling_codes>`_ listed in the ``whitelist`` field.
+    Phone numbers with `country calling codes <https://en.wikipedia.org/wiki/List_of_country_calling_codes>`_ listed in the ``whitelist``, will ``NOT`` receive messages through the `Twilio Messaging Service <https://twilio.com>`_.
 
     `Country calling codes <https://en.wikipedia.org/wiki/List_of_country_calling_codes>`_ listed in the ``whitelist`` field should begin with a ``+`` symbol (e.g "+237").
 
@@ -90,6 +90,7 @@ Send single SMS message
     "twilio_account_sid": "",
     "twilio_auth_token": "",
     "twilio_service_sid": "",
+    "twilio_from": "",
     "whitelist": ["+237"], 
     "data": [{
         "operator_name":"",
@@ -105,9 +106,9 @@ Send bulk SMS messages
 
 .. note::
 
-    To send messages using `Twilio Messaging Service <https://twilio.com>`_, ``twilio_account_sid``, ``twilio_auth_token`` and, ``twilio_service_sid`` fields should be present in the request body.
+    To send messages using `Twilio Messaging Service <https://twilio.com>`_, ``twilio_account_sid``, ``twilio_auth_token`` and, either ``twilio_service_sid`` or ``twilio_from`` fields should be present in the request body.
 
-    Messages will ``NOT`` be sent to phone numbers with `country calling codes <https://en.wikipedia.org/wiki/List_of_country_calling_codes>`_ listed in the ``whitelist`` field.
+    Phone numbers with `country calling codes <https://en.wikipedia.org/wiki/List_of_country_calling_codes>`_ listed in the ``whitelist``, will ``NOT`` receive messages through the `Twilio Messaging Service <https://twilio.com>`_.
 
     `Country calling codes <https://en.wikipedia.org/wiki/List_of_country_calling_codes>`_ listed in the ``whitelist`` field should begin with a ``+`` symbol (e.g "+237").
 
@@ -143,6 +144,7 @@ Send bulk SMS messages
     "twilio_account_sid": "",
     "twilio_auth_token": "",
     "twilio_service_sid": "",
+    "twilio_from": "",
     "whitelist": ["+237"], 
     "data": [{
         "operator_name":"",

@@ -98,6 +98,43 @@ def get_phonenumber_country(MSISDN: str) -> str:
     except Exception as error:
         raise error
 
+def get_phonenumber_country_code(MSISDN: str) -> str:
+    """Returns the country code of MSISDN.
+    Args:
+        MSISDN (str):
+            The phone number for which country code is required.
+
+    Returns:
+        (str): country code
+
+    Exceptions:
+        INVALID_PHONE_NUMBER_EXCEPTION
+        INVALID_COUNTRY_CODE_EXCEPTION
+        MISSING_COUNTRY_CODE_EXCEPTION
+    """
+
+    try:
+        _number = phonenumbers.parse(MSISDN, "en")
+
+        if not phonenumbers.is_valid_number(_number):
+            raise InvalidPhoneNUmber()
+
+        country_code = _number.country_code
+
+        return str(country_code)
+
+    except phonenumbers.NumberParseException as error:
+        if error.error_type == phonenumbers.NumberParseException.INVALID_COUNTRY_CODE:
+            if MSISDN[0] == "+" or MSISDN[0] == "0":
+                raise InvalidCountryCode()
+            else:
+                raise MissingCountryCode()
+        else:
+            raise error
+
+    except Exception as error:
+        raise error
+
 def check_phonenumber_E164(MSISDN: str) -> bool:
     """
     """

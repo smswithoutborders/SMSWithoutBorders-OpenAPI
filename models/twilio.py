@@ -1,24 +1,18 @@
 import logging
 logger = logging.getLogger(__name__)
 
-from config_init import configuration
-
-config = configuration()
-twilio = config["TWILIO"]
-
 from twilio.rest import Client
-
-account_sid = twilio["ACCOUNT_SID"]
-auth_token = twilio["AUTH_TOKEN"]
-service_sid = twilio["SERVICE_SID"]
 
 from werkzeug.exceptions import InternalServerError
 
 class Twilio_Model:
-    def __init__(self) -> None:
+    def __init__(self, account_sid: str, auth_token: str, service_sid: str) -> None:
         """
         """
-        self.client = Client(account_sid, auth_token)
+        self.account_sid = account_sid
+        self.auth_token = auth_token
+        self.service_sid = service_sid
+        self.client = Client(self.account_sid, self.auth_token)
 
     def message(self, number:str, text: str) -> None:
         """
@@ -28,7 +22,7 @@ class Twilio_Model:
 
             message = self.client.messages \
                         .create(
-                            messaging_service_sid=service_sid, 
+                            messaging_service_sid=self.service_sid, 
                             body=text,      
                             to=number
                         )

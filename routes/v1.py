@@ -11,7 +11,6 @@ dev_cookie_name = "SWOBDev"
 from flask import Blueprint
 from flask import jsonify
 from flask import request
-from flask import abort
 
 from RabbitMQ.src.rabbitmq import RabbitMQ
 
@@ -19,11 +18,13 @@ from routes.helpers import InvalidCountryCode
 from routes.helpers import InvalidPhoneNUmber
 from routes.helpers import NotE164PhoneNumberFormat
 from routes.helpers import MissingCountryCode
-from routes.helpers import get_phonenumber_country
+from routes.helpers import get_phonenumber_country_code
 from routes.helpers import check_phonenumber_E164
+from routes.helpers import get_phonenumber_carrier_name
 
 from models.metrics import Metric_Model
 from models.sessions import Session_Model
+from models.twilio import Twilio_Model
 
 import requests
 import json
@@ -217,160 +218,216 @@ def sms():
         else:
             req_uuid = request.json["uuid"]
 
+        if not "twilio_account_sid" in request.json or not request.json["twilio_account_sid"]:
+            account_sid = None
+        else:
+            account_sid = request.json["twilio_account_sid"]
+          
+        if not "twilio_auth_token" in request.json or not request.json["twilio_auth_token"]:
+            auth_token = None
+        else:
+            auth_token = request.json["twilio_auth_token"]
+          
+        if not "twilio_service_sid" in request.json or not request.json["twilio_service_sid"]:
+            service_sid = None
+        else:
+            service_sid = request.json["twilio_service_sid"]
+
+        if not "whitelist" in request.json or not request.json["whitelist"]:
+            whitelist = []
+        else:
+            whitelist = request.json["whitelist"]
+
+            if not isinstance(request.json["whitelist"], list):
+                logger.error("whitelist most be a list")
+                raise BadRequest()
+
         errors = []
 
         r = RabbitMQ(dev_id=authId)
 
-        for data in payload:
-            text = data["text"]
-            number = data["number"]
-            operatorName = data["operator_name"]
+        if r.exist():
+            for data in payload:
+                text = data["text"]
+                number = data["number"]
+                operatorName = data["operator_name"]
 
-            sms_data = {
-                "uid": str(uuid4()),
-                "operator_name": operatorName,
-                "text": text,
-                "number": number,
-            }
+                country_code = "+" + get_phonenumber_country_code(number)
 
-            try:
-                if r.exist():
-                    check_phonenumber_E164(number)
-                    r.request_sms(data=sms_data)
-                    Metrics.create(
-                        uid=sms_data["uid"],
-                        phone_number=sms_data["number"],
-                        operator_name=sms_data["operator_name"],
-                        status="requested",
-                        message="SMS has been successfully requested",
-                        auth_id=authId
-                    )
+                if account_sid and auth_token and service_sid and country_code not in whitelist:
+                    try:
+                        Twilio = Twilio_Model(
+                            account_sid=account_sid,
+                            auth_token=auth_token,
+                            service_sid=service_sid
+                        )
+
+                        sms_data = {
+                            "text": text,
+                            "number": number,
+                        }
+
+                        Twilio.message(number=sms_data["number"], text=sms_data["text"])
+
+                    except Exception as error:
+                        logger.error(error)
+
+                        err_data = {
+                            "id": "",
+                            "operator_name": "",
+                            "number": sms_data["number"],
+                            "error_message": str(error),
+                            "timestamp": str(datetime.now()),
+                        }
+
+                        errors.append(err_data)
+
                 else:
-                    logger.error("USER IS NOT SUBSCRIBED")
-                    raise Unauthorized()
+                    sms_data = {
+                        "uid": str(uuid4()),
+                        "operator_name": operatorName,
+                        "text": text,
+                        "number": number,
+                    }
 
-            except InvalidPhoneNUmber as error:
-                logger.error(error)
+                    try:
+                        check_phonenumber_E164(number)
+                        r.request_sms(data=sms_data)
+                        Metrics.create(
+                            uid=sms_data["uid"],
+                            phone_number=sms_data["number"],
+                            operator_name=sms_data["operator_name"],
+                            status="requested",
+                            message="SMS has been successfully requested",
+                            auth_id=authId
+                        )
+                        
+                    except InvalidPhoneNUmber as error:
+                        logger.error(error)
 
-                Metrics.create(
-                    uid=sms_data["uid"],
-                    phone_number=sms_data["number"],
-                    operator_name=sms_data["operator_name"],
-                    status="failed",
-                    message=str(error),
-                    auth_id=authId
-                )
+                        Metrics.create(
+                            uid=sms_data["uid"],
+                            phone_number=sms_data["number"],
+                            operator_name=sms_data["operator_name"],
+                            status="failed",
+                            message=str(error),
+                            auth_id=authId
+                        )
 
-                err_data = {
-                    "id": sms_data["uid"],
-                    "operator_name": sms_data["operator_name"],
-                    "number": sms_data["number"],
-                    "error_message": str(error),
-                    "timestamp": str(datetime.now()),
-                }
-                
-                errors.append(err_data)
+                        err_data = {
+                            "id": sms_data["uid"],
+                            "operator_name": sms_data["operator_name"],
+                            "number": sms_data["number"],
+                            "error_message": str(error),
+                            "timestamp": str(datetime.now()),
+                        }
+                        
+                        errors.append(err_data)
 
-            except InvalidCountryCode as error:
-                logger.error(error)
+                    except InvalidCountryCode as error:
+                        logger.error(error)
 
-                Metrics.create(
-                    uid=sms_data["uid"],
-                    phone_number=sms_data["number"],
-                    operator_name=sms_data["operator_name"],
-                    status="failed",
-                    message=str(error),
-                    auth_id=authId
-                )
+                        Metrics.create(
+                            uid=sms_data["uid"],
+                            phone_number=sms_data["number"],
+                            operator_name=sms_data["operator_name"],
+                            status="failed",
+                            message=str(error),
+                            auth_id=authId
+                        )
 
-                err_data = {
-                    "id": sms_data["uid"],
-                    "operator_name": sms_data["operator_name"],
-                    "number": sms_data["number"],
-                    "error_message": str(error),
-                    "timestamp": str(datetime.now()),
-                }
-                
-                errors.append(err_data)
+                        err_data = {
+                            "id": sms_data["uid"],
+                            "operator_name": sms_data["operator_name"],
+                            "number": sms_data["number"],
+                            "error_message": str(error),
+                            "timestamp": str(datetime.now()),
+                        }
+                        
+                        errors.append(err_data)
 
-            except MissingCountryCode as error:
-                logger.error(error)
-                
-                Metrics.create(
-                    uid=sms_data["uid"],
-                    phone_number=sms_data["number"],
-                    operator_name=sms_data["operator_name"],
-                    status="failed",
-                    message=str(error),
-                    auth_id=authId
-                )
+                    except MissingCountryCode as error:
+                        logger.error(error)
+                        
+                        Metrics.create(
+                            uid=sms_data["uid"],
+                            phone_number=sms_data["number"],
+                            operator_name=sms_data["operator_name"],
+                            status="failed",
+                            message=str(error),
+                            auth_id=authId
+                        )
 
-                err_data = {
-                    "id": sms_data["uid"],
-                    "operator_name": sms_data["operator_name"],
-                    "number": sms_data["number"],
-                    "error_message": str(error),
-                    "timestamp": str(datetime.now()),
-                }
+                        err_data = {
+                            "id": sms_data["uid"],
+                            "operator_name": sms_data["operator_name"],
+                            "number": sms_data["number"],
+                            "error_message": str(error),
+                            "timestamp": str(datetime.now()),
+                        }
 
-                errors.append(err_data)
+                        errors.append(err_data)
 
-            except NotE164PhoneNumberFormat as error:
-                logger.error(error)
-                
-                Metrics.create(
-                    uid=sms_data["uid"],
-                    phone_number=sms_data["number"],
-                    operator_name=sms_data["operator_name"],
-                    status="failed",
-                    message=str(error),
-                    auth_id=authId
-                )
+                    except NotE164PhoneNumberFormat as error:
+                        logger.error(error)
+                        
+                        Metrics.create(
+                            uid=sms_data["uid"],
+                            phone_number=sms_data["number"],
+                            operator_name=sms_data["operator_name"],
+                            status="failed",
+                            message=str(error),
+                            auth_id=authId
+                        )
 
-                err_data = {
-                    "id": sms_data["uid"],
-                    "operator_name": sms_data["operator_name"],
-                    "number": sms_data["number"],
-                    "error_message": str(error),
-                    "timestamp": str(datetime.now()),
-                }
+                        err_data = {
+                            "id": sms_data["uid"],
+                            "operator_name": sms_data["operator_name"],
+                            "number": sms_data["number"],
+                            "error_message": str(error),
+                            "timestamp": str(datetime.now()),
+                        }
 
-                errors.append(err_data)
+                        errors.append(err_data)
 
-            except Exception as error:
-                logger.error(error)
+                    except Exception as error:
+                        logger.error(error)
 
-                Metrics.create(
-                    uid=sms_data["uid"],
-                    phone_number=sms_data["number"],
-                    operator_name=sms_data["operator_name"],
-                    status="failed",
-                    message="An unexpected error has occurred. Please contact your system administrator.",
-                    auth_id=authId
-                )
+                        Metrics.create(
+                            uid=sms_data["uid"],
+                            phone_number=sms_data["number"],
+                            operator_name=sms_data["operator_name"],
+                            status="failed",
+                            message="An unexpected error has occurred. Please contact your system administrator.",
+                            auth_id=authId
+                        )
 
-                err_data = {
-                    "id": sms_data["uid"],
-                    "operator_name": sms_data["operator_name"],
-                    "number": sms_data["number"],
-                    "error_message": str(error),
-                    "timestamp": str(datetime.now()),
-                }
+                        err_data = {
+                            "id": sms_data["uid"],
+                            "operator_name": sms_data["operator_name"],
+                            "number": sms_data["number"],
+                            "error_message": str(error),
+                            "timestamp": str(datetime.now()),
+                        }
 
-                errors.append(err_data)
+                        errors.append(err_data)
 
-        result = {"errors": errors, "uuid": req_uuid}
+            result = {"errors": errors, "uuid": req_uuid}
 
-        if callbackUrl:
-            callbacks = callbackUrl.split(",")
+            if callbackUrl:
+                callbacks = callbackUrl.split(",")
 
-            for callback in callbacks:
-                try:
-                    requests.post(url=callback.strip(), json=result)
-                except Exception as err:
-                    logger.error(err)
+                for callback in callbacks:
+                    try:
+                        requests.post(url=callback.strip(), json=result)
+                    except Exception as err:
+                        logger.error(err)
 
-        return "", 200
+            return "", 200
+                    
+        else:
+            logger.error("USER IS NOT SUBSCRIBED")
+            raise Unauthorized()
 
     except BadRequest as err:
         return str(err), 400
@@ -422,7 +479,7 @@ def sms_operator():
 
             try:
                 if not operatorName:
-                    operator = get_phonenumber_country(number)
+                    operator = get_phonenumber_carrier_name(number)
                     payload_data["operator_name"] = operator
                     result.append(payload_data)
 

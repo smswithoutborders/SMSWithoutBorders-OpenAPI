@@ -27,5 +27,5 @@ def configuration() -> dict:
         "API": config["API"],
         "SSL_API": config["SSL_API"],
         "SETUP_CREDS": setup["CREDENTIALS"],
-        "DEVELOPER": config["DEVELOPER"],
+        "DEVELOPER": config["DEVELOPER"]
     }

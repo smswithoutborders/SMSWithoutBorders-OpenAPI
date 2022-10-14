@@ -23,6 +23,10 @@ API V1 Endpoints
       - POST /v1/sms
       - None
       - * auth_id = STRING
+        * twilio_account_sid = STRING
+        * twilio_auth_token = STRING
+        * twilio_service_sid = STRING
+        * whitelist = [STRING]
         * data = [{text = STRING, number = STRING, operator_name = STRING}]
         * callback_url = STRING
         * uuid = STRING
@@ -45,6 +49,15 @@ Examples using `curl <https://curl.se/>`_
 
 Send single SMS message
 ***********************
+
+.. note::
+
+    To send messages using `Twilio Messaging Service <https://twilio.com>`_, ``twilio_account_sid``, ``twilio_auth_token`` and, ``twilio_service_sid`` fields should be present in the request body.
+
+    Messages will ``NOT`` be sent to phone numbers with `country calling codes <https://en.wikipedia.org/wiki/List_of_country_calling_codes>`_ listed in the ``whitelist`` field.
+
+    `Country calling codes <https://en.wikipedia.org/wiki/List_of_country_calling_codes>`_ listed in the ``whitelist`` field should begin with a ``+`` symbol (e.g "+237").
+
 .. note::
 
     The ``uuid`` key is any random string provided by the user used to identify the request. If left empty, OpenAPI will populate the ``uuid`` key with a randomly generated uuid.
@@ -74,6 +87,10 @@ Send single SMS message
     --header 'Content-Type: application/json' \
     --data-raw '{
     "auth_id":"",
+    "twilio_account_sid": "",
+    "twilio_auth_token": "",
+    "twilio_service_sid": "",
+    "whitelist": ["+237"], 
     "data": [{
         "operator_name":"",
         "text":"",
@@ -88,6 +105,14 @@ Send bulk SMS messages
 
 .. note::
 
+    To send messages using `Twilio Messaging Service <https://twilio.com>`_, ``twilio_account_sid``, ``twilio_auth_token`` and, ``twilio_service_sid`` fields should be present in the request body.
+
+    Messages will ``NOT`` be sent to phone numbers with `country calling codes <https://en.wikipedia.org/wiki/List_of_country_calling_codes>`_ listed in the ``whitelist`` field.
+
+    `Country calling codes <https://en.wikipedia.org/wiki/List_of_country_calling_codes>`_ listed in the ``whitelist`` field should begin with a ``+`` symbol (e.g "+237").
+
+.. note::
+
     The ``uuid`` key is any random string provided by the user used to identify the request. If left empty, OpenAPI will populate the ``uuid`` key with a randomly generated uuid.
 
     The ``callback_url`` will be invoked after the request is complete with a ``POST`` in the form:
@@ -115,6 +140,10 @@ Send bulk SMS messages
     --header 'Content-Type: application/json' \
     --data-raw '{
     "auth_id":"",
+    "twilio_account_sid": "",
+    "twilio_auth_token": "",
+    "twilio_service_sid": "",
+    "whitelist": ["+237"], 
     "data": [{
         "operator_name":"",
         "text":"",

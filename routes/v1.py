@@ -218,20 +218,20 @@ def sms():
         else:
             req_uuid = request.json["uuid"]
 
-        if not "account_sid" in request.json or not request.json["account_sid"]:
+        if not "twilio_account_sid" in request.json or not request.json["twilio_account_sid"]:
             account_sid = None
         else:
-            account_sid = request.json["account_sid"]
+            account_sid = request.json["twilio_account_sid"]
           
-        if not "auth_token" in request.json or not request.json["auth_token"]:
+        if not "twilio_auth_token" in request.json or not request.json["twilio_auth_token"]:
             auth_token = None
         else:
-            auth_token = request.json["auth_token"]
+            auth_token = request.json["twilio_auth_token"]
           
-        if not "service_sid" in request.json or not request.json["service_sid"]:
+        if not "twilio_service_sid" in request.json or not request.json["twilio_service_sid"]:
             service_sid = None
         else:
-            service_sid = request.json["service_sid"]
+            service_sid = request.json["twilio_service_sid"]
 
         if not "whitelist" in request.json or not request.json["whitelist"]:
             whitelist = []
@@ -253,7 +253,6 @@ def sms():
                 operatorName = data["operator_name"]
 
                 country_code = "+" + get_phonenumber_country_code(number)
-                print(country_code)
 
                 if account_sid and auth_token and service_sid and country_code not in whitelist:
                     try:

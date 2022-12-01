@@ -1,4 +1,0 @@
-[submodule "SMSWithoutBorders-Product-deps-RabbitMQ"]
-	path = RabbitMQ
-	url = https://github.com/smswithoutborders/SMSWithoutBorders-Product-deps-RabbitMQ.git
-	branch = master

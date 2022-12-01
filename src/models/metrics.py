@@ -3,7 +3,7 @@ logger = logging.getLogger(__name__)
 
 from peewee import DatabaseError
 
-from schemas.metrics import Metrics
+from src.schemas.metrics import Metrics
 
 from werkzeug.exceptions import InternalServerError
 from werkzeug.exceptions import Conflict

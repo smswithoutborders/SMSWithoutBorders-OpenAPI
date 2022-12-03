@@ -1,39 +1,32 @@
 import logging
+import requests
+import json
+from base64 import b64decode
+from uuid import uuid1
+from uuid import uuid4
+from datetime import datetime
+
 logger = logging.getLogger(__name__)
 
-from config_init import configuration
-config = configuration()
-
-SETUP = config["SETUP_CREDS"]
-DEVELOPER = config["DEVELOPER"]
-dev_cookie_name = "SWOBDev"
+from settings import Configurations
+setupId = Configurations.ID
+setupKey = Configurations.KEY
+developerHost = Configurations.DEV_HOST
+developerPort = Configurations.DEV_PORT
+developerVersion = Configurations.DEV_VERSION
+dev_cookie_name = Configurations.DEV_COOKIE_NAME
 
 from flask import Blueprint
 from flask import jsonify
 from flask import request
 
-from RabbitMQ.src.rabbitmq import RabbitMQ
+from src.RabbitmqHandler import RabbitMQ
 
-from routes.helpers import InvalidCountryCode
-from routes.helpers import InvalidPhoneNUmber
-from routes.helpers import NotE164PhoneNumberFormat
-from routes.helpers import MissingCountryCode
-from routes.helpers import get_phonenumber_country_code
-from routes.helpers import check_phonenumber_E164
-from routes.helpers import get_phonenumber_carrier_name
+from src.PhoneNumberHandler import InvalidCountryCode, InvalidPhoneNUmber, NotE164PhoneNumberFormat, MissingCountryCode, get_phonenumber_country_code, check_phonenumber_E164, get_phonenumber_carrier_name
 
-from models.metrics import Metric_Model
-from models.sessions import Session_Model
-from models.twilio import Twilio_Model
-
-import requests
-import json
-from base64 import b64decode
-
-from uuid import uuid1
-from uuid import uuid4
-
-from datetime import datetime
+from src.models.metrics import Metric_Model
+from src.models.sessions import Session_Model
+from src.models.twilio import Twilio_Model
 
 v1 = Blueprint("v1", __name__)
 dev_v1 = Blueprint("dev_v1", __name__)
@@ -49,16 +42,16 @@ def subscribe():
     """
     """
     try:
-        if not "auth_id" in request.json or not request.json["auth_id"]:
+        if not request.json.get("auth_id"):
             logger.error("no auth_id")
             raise BadRequest()
-        elif not "auth_key" in request.json or not request.json["auth_key"]:
+        elif not request.json.get("auth_key"):
             logger.error("no auth_key")
             raise BadRequest()
-        elif not "key" in request.json or not request.json["key"]:
+        elif not request.json.get("key"):
             logger.error("no key")
             raise BadRequest()
-        elif not "id" in request.json or not request.json["id"]:
+        elif not request.json.get("id"):
             logger.error("no id")
             raise BadRequest()
 
@@ -67,12 +60,6 @@ def subscribe():
         devSetupId = request.json["id"]
         devSetupKey = request.json["key"]
 
-        setupId = SETUP["ID"]
-        setupKey = SETUP["key"]
-
-        developerHost = DEVELOPER["HOST"]
-        developerPort = DEVELOPER["PORT"]
-        developerVersion = DEVELOPER["VERSION"]
         developerUrl = (
             f"{developerHost}:{developerPort}/{developerVersion}/authenticate"
         )
@@ -123,16 +110,16 @@ def unsubscribe():
     """
     """
     try:
-        if not "auth_id" in request.json or not request.json["auth_id"]:
+        if not request.json.get("auth_id"):
             logger.error("no auth_id")
             raise BadRequest()
-        elif not "auth_key" in request.json or not request.json["auth_key"]:
+        elif not request.json.get("auth_key"):
             logger.error("no auth_key")
             raise BadRequest()
-        elif not "key" in request.json or not request.json["key"]:
+        elif not request.json.get("key"):
             logger.error("no key")
             raise BadRequest()
-        elif not "id" in request.json or not request.json["id"]:
+        elif not request.json.get("id"):
             logger.error("no id")
             raise BadRequest()
 
@@ -141,12 +128,6 @@ def unsubscribe():
         devSetupId = request.json["id"]
         devSetupKey = request.json["key"]
 
-        setupId = SETUP["ID"]
-        setupKey = SETUP["key"]
-
-        developerHost = DEVELOPER["HOST"]
-        developerPort = DEVELOPER["PORT"]
-        developerVersion = DEVELOPER["VERSION"]
         developerUrl = (
             f"{developerHost}:{developerPort}/{developerVersion}/authenticate"
         )
@@ -193,10 +174,10 @@ def sms():
     """
     """
     try:
-        if not "auth_id" in request.json or not request.json["auth_id"]:
+        if not request.json.get("auth_id"):
             logger.error("no auth_id")
             raise BadRequest()
-        elif not "data" in request.json:
+        elif not request.json.get("data"):
             logger.error("no data")
             raise BadRequest()
         elif not isinstance(request.json["data"], list):
@@ -208,44 +189,17 @@ def sms():
 
         Metrics = Metric_Model()
 
-        if not "callback_url" in request.json or not request.json["callback_url"]:
-            callbackUrl = None
-        else:
-            callbackUrl = request.json["callback_url"]
+        callbackUrl = request.json.get("callback_url")
+        req_uuid = request.json.get("uuid") or str(uuid1())
+        account_sid = request.json.get("twilio_account_sid")
+        auth_token = request.json.get("twilio_auth_token")
+        service_sid = request.json.get("twilio_service_sid")
+        _from = request.json.get("twilio_from")
+        whitelist = request.json.get("whitelist") or []
 
-        if not "uuid" in request.json or not request.json["uuid"]:
-            req_uuid = str(uuid1())
-        else:
-            req_uuid = request.json["uuid"]
-
-        if not "twilio_account_sid" in request.json or not request.json["twilio_account_sid"]:
-            account_sid = None
-        else:
-            account_sid = request.json["twilio_account_sid"]
-          
-        if not "twilio_auth_token" in request.json or not request.json["twilio_auth_token"]:
-            auth_token = None
-        else:
-            auth_token = request.json["twilio_auth_token"]
-          
-        if not "twilio_service_sid" in request.json or not request.json["twilio_service_sid"]:
-            service_sid = None
-        else:
-            service_sid = request.json["twilio_service_sid"]
-
-        if not "twilio_from" in request.json or not request.json["twilio_from"]:
-            _from = None
-        else:
-            _from = request.json["twilio_from"]
-
-        if not "whitelist" in request.json or not request.json["whitelist"]:
-            whitelist = []
-        else:
-            whitelist = request.json["whitelist"]
-
-            if not isinstance(request.json["whitelist"], list):
-                logger.error("whitelist most be a list")
-                raise BadRequest()
+        if not isinstance(request.json["whitelist"], list):
+            logger.error("whitelist most be a list")
+            raise BadRequest()
 
         errors = []
 
@@ -255,7 +209,6 @@ def sms():
             for data in payload:
                 text = data["text"]
                 number = data["number"]
-                operatorName = data["operator_name"]
 
                 country_code = "+" + get_phonenumber_country_code(number)
 
@@ -291,7 +244,7 @@ def sms():
                 else:
                     sms_data = {
                         "uid": str(uuid4()),
-                        "operator_name": operatorName,
+                        "operator_name": get_phonenumber_carrier_name(number),
                         "text": text,
                         "number": number,
                     }
@@ -467,15 +420,8 @@ def sms_operator():
         for data in payload:
             number = data["number"]
 
-            if not "text" in data or not data["text"]:
-                text = ""
-            else:
-                text = data["text"]
-
-            if not "operator_name" in data or not data["operator_name"]:
-                operatorName = ""
-            else:
-                operatorName = data["operator_name"]
+            text = data.get("text") or ""
+            operatorName = data.get("operator_name") or ""
 
             payload_data = {
                 "number": number,
@@ -529,16 +475,16 @@ def metrics():
 
         Metrics = Metric_Model()
 
-        if not "auth_id" in request.json or not request.json["auth_id"]:
+        if not request.json.get("auth_id"):
             logger.error("no auth_id")
             raise BadRequest()
-        elif not "auth_key" in request.json or not request.json["auth_key"]:
+        elif not request.json.get("auth_key"):
             logger.error("no auth_key")
             raise BadRequest()
-        elif not "key" in request.json or not request.json["key"]:
+        elif not request.json.get("key"):
             logger.error("no key")
             raise BadRequest()
-        elif not "id" in request.json or not request.json["id"]:
+        elif not request.json.get("id"):
             logger.error("no id")
             raise BadRequest()
 
@@ -547,12 +493,6 @@ def metrics():
         devSetupId = request.json["id"]
         devSetupKey = request.json["key"]
 
-        setupId = SETUP["ID"]
-        setupKey = SETUP["key"]
-
-        developerHost = DEVELOPER["HOST"]
-        developerPort = DEVELOPER["PORT"]
-        developerVersion = DEVELOPER["VERSION"]
         developerUrl = (
             f"{developerHost}:{developerPort}/{developerVersion}/authenticate"
         )
@@ -580,7 +520,7 @@ def metrics():
                 response = requests.post(url=developerUrl, json=data)
 
                 if response.status_code == 200:
-                    if not "old_auth_id" in request.json or not request.json["old_auth_id"]:
+                    if not request.json.get("old_auth_id"):
                         logger.error("no old_auth_id")
                         raise BadRequest()
 
@@ -638,13 +578,13 @@ def updateMetricStatus(uid):
         if not request.cookies.get(dev_cookie_name):
             logger.error("No dev cookie")
             raise Unauthorized()
-        elif not "status" in request.json or not request.json["status"]:
+        elif not request.json.get("status"):
             logger.error("No status provided")
             raise Unauthorized()
         elif request.json["status"] not in ["requested", "failed", "delivered", "sent"]:
             logger.error("Invalid status '%s'" % request.json["status"])
             raise Unauthorized()
-        elif not "message" in request.json or not request.json["message"]:
+        elif not request.json.get("message"):
             logger.error("No message provided")
             raise Unauthorized()
 

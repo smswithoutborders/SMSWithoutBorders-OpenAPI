@@ -1,15 +1,11 @@
 import logging
+import requests
+
 logger = logging.getLogger(__name__)
 
-from config_init import configuration
-config = configuration()
-
-DEVELOPER = config["DEVELOPER"]
-
-developerHost = DEVELOPER["HOST"]
-developerPort = DEVELOPER["PORT"]
-
-import requests
+from settings import Configurations
+developerHost = Configurations.DEV_HOST
+developerPort = Configurations.DEV_PORT
 
 from werkzeug.exceptions import InternalServerError
 from werkzeug.exceptions import Conflict

@@ -26,6 +26,7 @@ API V1 Endpoints
         * twilio_account_sid = STRING
         * twilio_auth_token = STRING
         * twilio_service_sid = STRING
+        * twilio_from = STRING
         * whitelist = [STRING]
         * data = [{text = STRING, number = STRING, operator_name = STRING}]
         * callback_url = STRING
@@ -34,7 +35,7 @@ API V1 Endpoints
     * - :ref:`Get Phone number operator name<Get Phone Number operator name>`
       - POST /v1/sms/operators
       - None
-      - * [{text = STRING, number = STRING, operator_name = STRING}]
+      - * [{text = STRING, number = STRING}]
 
     * - :ref:`Update message status<Update message status>`
       - PUT /v1/metrics/<uid>
@@ -93,7 +94,6 @@ Send single SMS message
     "twilio_from": "",
     "whitelist": ["+237"], 
     "data": [{
-        "operator_name":"",
         "text":"",
         "number":""
         }],
@@ -147,17 +147,14 @@ Send bulk SMS messages
     "twilio_from": "",
     "whitelist": ["+237"], 
     "data": [{
-        "operator_name":"",
         "text":"",
         "number":""
         },
         {
-        "operator_name":"",
         "text":"",
         "number":""
         },
         {
-        "operator_name":"",
         "text":"",
         "number":""
         }],
@@ -168,7 +165,7 @@ Send bulk SMS messages
 Get Phone Number operator name
 ******************************
 
-If the ``operator_name`` key is an empty string or not present in the request, It will be generated and populated in the response. But if the ``operator_name`` key is present it won't be modified in the response.
+The ``text`` key is optional and can be left out of the request body.
 
 .. code-block:: bash
 
@@ -176,17 +173,14 @@ If the ``operator_name`` key is an empty string or not present in the request, I
     --header 'Content-Type: application/json' \
     --data-raw '[
         {
-        "operator_name":"",
         "text":"",
         "number":""
         },
         {
-        "operator_name":"",
         "text":"",
         "number":""
         },
         {
-        "operator_name":"",
         "text":"",
         "number":""
         }

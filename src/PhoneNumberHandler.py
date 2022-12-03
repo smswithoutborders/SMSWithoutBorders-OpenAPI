@@ -1,10 +1,9 @@
-from asyncio.log import logger
+import logging
 
-import phonenumbers
-from phonenumbers import geocoder
-from phonenumbers import carrier
+from phonenumbers import parse, geocoder, carrier, format_number, is_valid_number, PhoneNumberFormat
 from phonenumbers import NumberParseException
-from phonenumbers import format_number
+
+logger = logging.getLogger(__name__)
 
 class InvalidPhoneNUmber(Exception):
     def __init__(self, message="Invalid phone number"):
@@ -42,15 +41,15 @@ def get_phonenumber_carrier_name(MSISDN: str) -> str:
     """
 
     try:
-        _number = phonenumbers.parse(MSISDN, "en")
+        _number = parse(MSISDN, "en")
 
-        if not phonenumbers.is_valid_number(_number):
+        if not is_valid_number(_number):
             raise InvalidPhoneNUmber()
 
-        return phonenumbers.carrier.name_for_number(_number, "en")
+        return carrier.name_for_number(_number, "en")
 
-    except phonenumbers.NumberParseException as error:
-        if error.error_type == phonenumbers.NumberParseException.INVALID_COUNTRY_CODE:
+    except NumberParseException as error:
+        if error.error_type == NumberParseException.INVALID_COUNTRY_CODE:
             if MSISDN[0] == "+" or MSISDN[0] == "0":
                 raise InvalidCountryCode()
             else:
@@ -77,17 +76,17 @@ def get_phonenumber_country(MSISDN: str) -> str:
     """
 
     try:
-        _number = phonenumbers.parse(MSISDN, "en")
+        _number = parse(MSISDN, "en")
 
-        if not phonenumbers.is_valid_number(_number):
+        if not is_valid_number(_number):
             raise InvalidPhoneNUmber()
 
         country_name = geocoder.country_name_for_number(_number, "en")
 
         return country_name
 
-    except phonenumbers.NumberParseException as error:
-        if error.error_type == phonenumbers.NumberParseException.INVALID_COUNTRY_CODE:
+    except NumberParseException as error:
+        if error.error_type == NumberParseException.INVALID_COUNTRY_CODE:
             if MSISDN[0] == "+" or MSISDN[0] == "0":
                 raise InvalidCountryCode()
             else:
@@ -114,17 +113,17 @@ def get_phonenumber_country_code(MSISDN: str) -> str:
     """
 
     try:
-        _number = phonenumbers.parse(MSISDN, "en")
+        _number = parse(MSISDN, "en")
 
-        if not phonenumbers.is_valid_number(_number):
+        if not is_valid_number(_number):
             raise InvalidPhoneNUmber()
 
         country_code = _number.country_code
 
         return str(country_code)
 
-    except phonenumbers.NumberParseException as error:
-        if error.error_type == phonenumbers.NumberParseException.INVALID_COUNTRY_CODE:
+    except NumberParseException as error:
+        if error.error_type == NumberParseException.INVALID_COUNTRY_CODE:
             if MSISDN[0] == "+" or MSISDN[0] == "0":
                 raise InvalidCountryCode()
             else:
@@ -139,9 +138,9 @@ def check_phonenumber_E164(MSISDN: str) -> bool:
     """
     """
     try:
-        _number = phonenumbers.parse(MSISDN, "en")
+        _number = parse(MSISDN, "en")
 
-        if MSISDN != phonenumbers.format_number(_number, phonenumbers.PhoneNumberFormat.E164):
+        if MSISDN != format_number(_number, PhoneNumberFormat.E164):
             raise NotE164PhoneNumberFormat()
         else:
             return True

@@ -48,7 +48,8 @@ class Configurations(baseConfig):
 
     RABBITMQ_SSL_ACTIVE = False if (os.environ.get("RABBITMQ_SSL_ACTIVE") or "False").lower() == "false" else True if (os.environ.get("RABBITMQ_SSL_ACTIVE") or "False").lower() == "true" else False
     RABBITMQ_SSL_HOST = os.environ.get("RABBITMQ_SSL_HOST") 
-    RABBITMQ_SSL_PORT = os.environ.get("RABBITMQ_SSL_PORT")
+    RABBITMQ_MANAGEMENT_PORT_SSL = os.environ.get("RABBITMQ_MANAGEMENT_PORT_SSL") or "15671"
+    RABBITMQ_SERVER_PORT_SSL = os.environ.get("RABBITMQ_SERVER_PORT_SSL") or "5671"
     RABBITMQ_SSL_CACERT = os.environ.get("RABBITMQ_SSL_CACERT") or ""
     RABBITMQ_SSL_CRT = os.environ.get("RABBITMQ_SSL_CRT") or ""
     RABBITMQ_SSL_KEY = os.environ.get("RABBITMQ_SSL_KEY") or ""

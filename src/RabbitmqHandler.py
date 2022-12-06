@@ -12,7 +12,8 @@ rabbitmq_user = Configurations.RABBITMQ_USER
 rabbitmq_password = Configurations.RABBITMQ_PASSWORD
 rabbitmq_ssl_active = Configurations.RABBITMQ_SSL_ACTIVE
 rabbitmq_ssl_host = Configurations.RABBITMQ_SSL_HOST
-rabbitmq_ssl_port = Configurations.RABBITMQ_SSL_PORT
+rabbitmq_ssl_server_port = Configurations.RABBITMQ_SERVER_PORT_SSL
+rabbitmq_ssl_management_port = Configurations.RABBITMQ_MANAGEMENT_PORT_SSL
 rabbitmq_ssl_cacert = Configurations.RABBITMQ_SSL_CACERT
 rabbitmq_ssl_crt = Configurations.RABBITMQ_SSL_CRT
 rabbitmq_ssl_key = Configurations.RABBITMQ_SSL_KEY
@@ -20,14 +21,13 @@ rabbitmq_exchange_name = Configurations.RABBITMQ_EXCHANGE_NAME
 rabbitmq_exchange_type = Configurations.RABBITMQ_EXCHANGE_TYPE
 rabbitmq_queue_name = Configurations.RABBITMQ_QUEUE_NAME
 rabbitmq_url_protocol = "https" if rabbitmq_ssl_active else "http"
-
-logging.basicConfig(level=logging.DEBUG)
+rabbitmq_active_port = rabbitmq_management_port if rabbitmq_ssl_active else rabbitmq_ssl_management_port
 
 class RabbitMQ:
     def __init__(self, dev_id: str):
         """ 
         """
-        self.rabbitmq_req_url = f"{rabbitmq_url_protocol}://{rabbitmq_host}:{rabbitmq_management_port}"
+        self.rabbitmq_req_url = f"{rabbitmq_url_protocol}://{rabbitmq_host}:{rabbitmq_active_port}"
         self.dev_id = dev_id
         self.__create_exchange_if_not_exist__(exchange_name=rabbitmq_exchange_name)
 
@@ -154,7 +154,7 @@ class RabbitMQ:
             ssl_options = pika.SSLOptions(context)
             logging.error("ssl connecting on: %s", rabbitmq_ssl_host)
             conn_params = pika.ConnectionParameters(
-                    port=rabbitmq_ssl_port, 
+                    port=rabbitmq_ssl_server_port, 
                     ssl_options=ssl_options,
                     credentials=credentials
                 )

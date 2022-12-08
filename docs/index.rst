@@ -11,7 +11,6 @@ Welcome to OpenAPI
 
     overview
     reference_documentation
-    setup
     usage
     examples
     host_openapi

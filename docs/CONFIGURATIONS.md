@@ -14,6 +14,7 @@
 - [Python](https://www.python.org/) (version >= [3.8.10](https://www.python.org/downloads/release/python-3810/))
 - [Python Virtual Environments](https://docs.python.org/3/tutorial/venv.html)
 - [RabbitMQ](https://www.rabbitmq.com/download.html)
+- [MySQL](https://www.mysql.com/) (version >= 8.0.28) ([MariaDB](https://mariadb.org/))
 
 ## Dependencies
 
@@ -35,6 +36,7 @@ Variables used for the Project:
 - MYSQL_USER=STRING
 - HOST=STRING
 - PORT=STRING
+- ORIGINS=ARRAY
 - SSL_SERVER_NAME=STRING
 - SSL_PORT=STRING
 - SSL_CERTIFICATE=PATH
@@ -81,6 +83,7 @@ $ MYSQL_DATABASE= \
   MYSQL_USER= \
   HOST= \
   PORT= \
+  ORIGINS= \
   SSL_SERVER_NAME= \
   SSL_PORT= \
   SSL_CERTIFICATE= \
@@ -114,6 +117,7 @@ $ MYSQL_DATABASE= \
   MYSQL_USER= \
   HOST= \
   PORT= \
+  ORIGINS= \
   SSL_SERVER_NAME= \
   SSL_PORT= \
   SSL_CERTIFICATE= \
@@ -176,6 +180,7 @@ $ docker run -d -p 9000:9000 \
   --env 'MYSQL_USER=' \
   --env 'HOST=' \
   --env 'PORT=' \
+  --env 'ORIGINS=' \
   --env 'DEV_HOST=' \
   --env 'DEV_PORT=' \
   --env 'DEV_VERSION=' \
@@ -198,6 +203,7 @@ $ docker run -d -p 9000:9000 \
   --env 'MYSQL_USER=' \
   --env 'HOST=' \
   --env 'PORT=' \
+  --env 'ORIGINS=' \
   --env 'SSL_SERVER_NAME=' \
   --env 'SSL_PORT=' \
   --env 'SSL_CERTIFICATE=' \

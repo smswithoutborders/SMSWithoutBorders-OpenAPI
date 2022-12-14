@@ -60,8 +60,6 @@ Variables used for the Project:
 
 ## Installation
 
-Install all python packages for SMSWITHOUTBORDERS-BE
-
 ### Pip
 
 ```bash
